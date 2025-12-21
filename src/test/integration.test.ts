@@ -44,6 +44,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Step 1: Configure the card
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Ring Alarm System',
       };
 
@@ -66,6 +67,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Initial configuration
       const initialConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Initial Title',
       };
 
@@ -75,6 +77,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Update configuration
       const updatedConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Updated Title',
       };
 
@@ -89,6 +92,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Setup card
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Ring Alarm',
       };
 
@@ -123,6 +127,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Set valid configuration first
       const validConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Valid Config',
       };
 
@@ -145,6 +150,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle missing HASS object gracefully', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Test Card',
       };
 
@@ -163,6 +169,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle theme changes without errors', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Theme Test',
       };
 
@@ -209,6 +216,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Configure the dynamic card
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Dynamic Card',
       };
 
@@ -221,6 +229,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle service calls through HASS object', async () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Service Test',
       };
 
@@ -245,6 +254,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle multiple configuration updates efficiently', () => {
       const baseConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Performance Test',
       };
 
@@ -269,6 +279,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle multiple HASS updates efficiently', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'HASS Performance Test',
       };
 

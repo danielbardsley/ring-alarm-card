@@ -35,7 +35,10 @@ export interface LovelaceCardConfig {
 
 export interface RingAlarmCardConfig extends LovelaceCardConfig {
   type: 'custom:ring-alarm-card';
+  entity: string; // Required: alarm_control_panel entity ID
   title?: string;
+  show_state_text?: boolean; // Default: true
+  compact_mode?: boolean; // Default: false
 }
 
 // Lovelace card interface
@@ -45,4 +48,25 @@ export interface LovelaceCard extends HTMLElement {
   getCardSize?(): number | Promise<number>;
   getConfigElement?(): HTMLElement;
   getStubConfig?(): LovelaceCardConfig;
+}
+
+// Alarm-specific interfaces
+export interface AlarmState {
+  state:
+    | 'disarmed'
+    | 'armed_home'
+    | 'armed_away'
+    | 'pending'
+    | 'triggered'
+    | 'unknown';
+  icon: string;
+  color: string;
+  label: string;
+  isAnimated: boolean;
+}
+
+export interface EntityError {
+  type: 'not_found' | 'invalid_domain' | 'unavailable' | 'unknown';
+  message: string;
+  entityId: string;
 }

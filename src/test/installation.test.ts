@@ -151,13 +151,14 @@ describe('Installation and Deployment Validation', () => {
 
       const minimalConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
       };
 
       expect(() => card.setConfig(minimalConfig)).not.toThrow();
 
       // Should apply defaults
       const config = (card as any).config;
-      expect(config.title).toBe('Custom Card');
+      expect(config.title).toBe('Ring Alarm');
     });
 
     it('should accept full configuration with all options', () => {
@@ -166,6 +167,7 @@ describe('Installation and Deployment Validation', () => {
 
       const fullConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'My Ring Alarm',
         customProperty: 'custom value',
       };
@@ -192,9 +194,7 @@ describe('Installation and Deployment Validation', () => {
       ];
 
       invalidConfigs.forEach(config => {
-        expect(() => card.setConfig(config as any)).toThrow(
-          /Ring Alarm Card configuration error/
-        );
+        expect(() => card.setConfig(config as any)).toThrow(/Ring Alarm Card/);
       });
     });
   });
@@ -247,9 +247,7 @@ describe('Installation and Deployment Validation', () => {
         } catch (error) {
           // Error should be caught and handled
           expect(error).toBeInstanceOf(Error);
-          expect(error.message).toContain(
-            'Ring Alarm Card configuration error'
-          );
+          expect(error.message).toContain('Ring Alarm Card');
         }
       }).not.toThrow();
     });

@@ -33,6 +33,13 @@
 - **ESLint Rules**: TypeScript-specific linting with Prettier integration
 - **Path Aliases**: `@/*` maps to `src/*` for clean imports
 
+## Testing Guidelines
+
+- **Test Responsibility**: If you break a test as part of a task, you must fix it as part of that same task
+- **No Broken Tests**: Never leave tests in a failing state when completing a task
+- **Test Updates**: When changing functionality, update corresponding tests to match the new behavior
+- **Test Coverage**: Maintain the 80% coverage threshold when making changes
+
 ## Common Commands
 
 ### Development

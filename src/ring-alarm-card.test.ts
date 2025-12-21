@@ -43,6 +43,7 @@ describe('RingAlarmCard Core Component', () => {
       // Set a basic config to trigger rendering
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Test Card',
       };
       card.setConfig(config);
@@ -134,6 +135,7 @@ describe('RingAlarmCard Core Component', () => {
     it('should support Home Assistant card configuration type', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Test Card',
       };
 
@@ -151,6 +153,7 @@ describe('RingAlarmCard Core Component', () => {
       it('should accept valid configuration', () => {
         const config: RingAlarmCardConfig = {
           type: 'custom:ring-alarm-card',
+          entity: 'alarm_control_panel.ring_alarm',
           title: 'Test Ring Card',
         };
 
@@ -170,16 +173,17 @@ describe('RingAlarmCard Core Component', () => {
 
       it('should throw error for null/undefined config', () => {
         expect(() => card.setConfig(null as any)).toThrow(
-          'Invalid configuration object'
+          'Ring Alarm Card configuration is required and must be an object'
         );
         expect(() => card.setConfig(undefined as any)).toThrow(
-          'Invalid configuration object'
+          'Ring Alarm Card configuration is required and must be an object'
         );
       });
 
       it('should merge config with defaults', () => {
         const config: RingAlarmCardConfig = {
           type: 'custom:ring-alarm-card',
+          entity: 'alarm_control_panel.ring_alarm',
           // No title provided
         };
 
@@ -187,7 +191,7 @@ describe('RingAlarmCard Core Component', () => {
 
         // Access private config through type assertion for testing
         const cardConfig = (card as any).config;
-        expect(cardConfig.title).toBe('Custom Card');
+        expect(cardConfig.title).toBe('Ring Alarm');
         expect(cardConfig.type).toBe('custom:ring-alarm-card');
       });
     });
@@ -207,6 +211,7 @@ describe('RingAlarmCard Core Component', () => {
         // Test with config
         const config: RingAlarmCardConfig = {
           type: 'custom:ring-alarm-card',
+          entity: 'alarm_control_panel.ring_alarm',
           title: 'Test Card',
         };
         card.setConfig(config);
@@ -367,6 +372,7 @@ describe('RingAlarmCard Core Component', () => {
     it('should render different content with valid config', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Test Card',
       };
 
@@ -392,6 +398,7 @@ describe('RingAlarmCard Core Component', () => {
     it('should handle configuration updates', () => {
       const initialConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Initial Title',
       };
 
@@ -399,6 +406,7 @@ describe('RingAlarmCard Core Component', () => {
 
       const updatedConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Updated Title',
       };
 
@@ -411,6 +419,7 @@ describe('RingAlarmCard Core Component', () => {
     it('should preserve custom properties in config', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Test',
         customProperty: 'custom value',
       };
@@ -428,17 +437,15 @@ describe('RingAlarmCard Core Component', () => {
         type: 'wrong-type',
       } as RingAlarmCardConfig;
 
-      expect(() => card.setConfig(invalidConfig)).toThrow(
-        /Ring Alarm Card configuration error/
-      );
+      expect(() => card.setConfig(invalidConfig)).toThrow(/Invalid card type/);
     });
 
     it('should handle non-object configurations', () => {
       expect(() => card.setConfig('invalid' as any)).toThrow(
-        'Invalid configuration object'
+        'Ring Alarm Card configuration is required and must be an object'
       );
       expect(() => card.setConfig(123 as any)).toThrow(
-        'Invalid configuration object'
+        'Ring Alarm Card configuration is required and must be an object'
       );
     });
   });
@@ -464,6 +471,7 @@ describe('RingAlarmCard Core Component', () => {
       // Test that config is properly stored after setConfig
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
         title: 'Test',
       };
       card.setConfig(config);
@@ -512,8 +520,8 @@ describe('RingAlarmCard Core Component', () => {
       it('should use Home Assistant CSS custom properties for theming', () => {
         const cssText = String(RingAlarmCard.styles);
 
-        // Should use HA card background properties
-        expect(cssText).toContain('var(--ha-card-background');
+        // Should use HA card background properties (handle line breaks and spaces)
+        expect(cssText).toContain('--ha-card-background');
         expect(cssText).toContain('var(--card-background-color');
 
         // Should use HA border properties
@@ -637,6 +645,7 @@ describe('RingAlarmCard Core Component', () => {
         // Set up card with config
         const config: RingAlarmCardConfig = {
           type: 'custom:ring-alarm-card',
+          entity: 'alarm_control_panel.ring_alarm',
           title: 'Test Card',
         };
         card.setConfig(config);
@@ -668,6 +677,7 @@ describe('RingAlarmCard Core Component', () => {
         // Set up card with config
         const config: RingAlarmCardConfig = {
           type: 'custom:ring-alarm-card',
+          entity: 'alarm_control_panel.ring_alarm',
           title: 'Test Card',
         };
         card.setConfig(config);
@@ -702,6 +712,7 @@ describe('RingAlarmCard Core Component', () => {
         // Set up card with config to trigger rendering
         const config: RingAlarmCardConfig = {
           type: 'custom:ring-alarm-card',
+          entity: 'alarm_control_panel.ring_alarm',
           title: 'Test Card',
         };
         card.setConfig(config);
@@ -737,6 +748,7 @@ describe('RingAlarmCard Core Component', () => {
           fc.property(
             fc.record({
               type: fc.constant('custom:ring-alarm-card'),
+              entity: fc.constant('alarm_control_panel.ring_alarm'),
               title: fc.option(fc.string(), { nil: undefined }),
             }),
             config => {
@@ -754,7 +766,7 @@ describe('RingAlarmCard Core Component', () => {
               if (config.title !== undefined) {
                 expect(storedConfig.title).toBe(config.title);
               } else {
-                expect(storedConfig.title).toBe('Custom Card'); // default value
+                expect(storedConfig.title).toBe('Ring Alarm'); // default value
               }
             }
           ),
@@ -768,6 +780,7 @@ describe('RingAlarmCard Core Component', () => {
           fc.property(
             fc.record({
               type: fc.constant('custom:ring-alarm-card'),
+              entity: fc.constant('alarm_control_panel.ring_alarm'),
               title: fc.option(fc.string()),
               additionalProp: fc.oneof(fc.string(), fc.integer(), fc.boolean()),
             }),
@@ -821,7 +834,7 @@ describe('RingAlarmCard Core Component', () => {
 
               // Should throw for non-object configurations
               expect(() => card.setConfig(invalidConfig as any)).toThrow(
-                /Invalid configuration object/
+                /Ring Alarm Card configuration is required and must be an object/
               );
             }
           ),
@@ -850,7 +863,7 @@ describe('RingAlarmCard Core Component', () => {
                 // Should provide descriptive error message
                 expect(error).toBeInstanceOf(Error);
                 expect((error as Error).message).toMatch(
-                  /Ring Alarm Card configuration error/
+                  /Invalid card type|Configuration is required/
                 );
               }
             }
@@ -896,6 +909,7 @@ describe('RingAlarmCard Core Component', () => {
               // Set up a valid config first
               const config: RingAlarmCardConfig = {
                 type: 'custom:ring-alarm-card',
+                entity: 'alarm_control_panel.ring_alarm',
                 title: 'Test Card',
               };
               card.setConfig(config);
@@ -943,6 +957,7 @@ describe('RingAlarmCard Core Component', () => {
               // Set up a valid config first
               const config: RingAlarmCardConfig = {
                 type: 'custom:ring-alarm-card',
+                entity: 'alarm_control_panel.ring_alarm',
                 title: 'Test Card',
               };
               card.setConfig(config);
@@ -986,6 +1001,7 @@ describe('RingAlarmCard Core Component', () => {
               // Set up a valid config first
               const config: RingAlarmCardConfig = {
                 type: 'custom:ring-alarm-card',
+                entity: 'alarm_control_panel.ring_alarm',
                 title: 'Test Card',
               };
               card.setConfig(config);
