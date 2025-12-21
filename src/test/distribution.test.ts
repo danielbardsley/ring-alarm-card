@@ -51,7 +51,7 @@ describe('Distribution Setup', () => {
     it('should have valid hacs.json content', () => {
       const hacsFile = join(process.cwd(), 'hacs.json');
       const hacsContent = JSON.parse(readFileSync(hacsFile, 'utf-8'));
-      
+
       expect(hacsContent).toHaveProperty('name');
       expect(hacsContent).toHaveProperty('filename', 'ring-alarm-card.js');
       expect(hacsContent).toHaveProperty('render_readme', true);
@@ -66,7 +66,7 @@ describe('Distribution Setup', () => {
     it('should have comprehensive info.md content', () => {
       const infoFile = join(process.cwd(), 'info.md');
       const infoContent = readFileSync(infoFile, 'utf-8');
-      
+
       expect(infoContent).toContain('# Ring Alarm Card');
       expect(infoContent).toContain('## Installation');
       expect(infoContent).toContain('## Configuration');
@@ -85,7 +85,7 @@ describe('Distribution Setup', () => {
     it('should have package.json with correct main field', () => {
       const packageFile = join(process.cwd(), 'package.json');
       const packageContent = JSON.parse(readFileSync(packageFile, 'utf-8'));
-      
+
       expect(packageContent.main).toBe('dist/ring-alarm-card.js');
       expect(packageContent.module).toBe('dist/ring-alarm-card.js');
     });
@@ -93,7 +93,7 @@ describe('Distribution Setup', () => {
     it('should have package.json with HACS-compatible metadata', () => {
       const packageFile = join(process.cwd(), 'package.json');
       const packageContent = JSON.parse(readFileSync(packageFile, 'utf-8'));
-      
+
       expect(packageContent.name).toBe('ring-alarm-card');
       expect(packageContent.keywords).toContain('home-assistant');
       expect(packageContent.keywords).toContain('lovelace');
@@ -103,7 +103,7 @@ describe('Distribution Setup', () => {
     it('should have proper repository information', () => {
       const packageFile = join(process.cwd(), 'package.json');
       const packageContent = JSON.parse(readFileSync(packageFile, 'utf-8'));
-      
+
       expect(packageContent).toHaveProperty('repository');
       expect(packageContent).toHaveProperty('bugs');
       expect(packageContent).toHaveProperty('homepage');
@@ -113,21 +113,25 @@ describe('Distribution Setup', () => {
     it('should have release scripts configured', () => {
       const packageFile = join(process.cwd(), 'package.json');
       const packageContent = JSON.parse(readFileSync(packageFile, 'utf-8'));
-      
+
       expect(packageContent.scripts).toHaveProperty('release');
       expect(packageContent.scripts).toHaveProperty('version');
       expect(packageContent.scripts).toHaveProperty('postversion');
     });
 
     it('should have GitHub Actions workflow files', () => {
-      expect(existsSync(join(process.cwd(), '.github/workflows/ci.yml'))).toBe(true);
-      expect(existsSync(join(process.cwd(), '.github/workflows/release.yml'))).toBe(true);
+      expect(existsSync(join(process.cwd(), '.github/workflows/ci.yml'))).toBe(
+        true
+      );
+      expect(
+        existsSync(join(process.cwd(), '.github/workflows/release.yml'))
+      ).toBe(true);
     });
 
     it('should have valid GitHub Actions CI workflow', () => {
       const ciFile = join(process.cwd(), '.github/workflows/ci.yml');
       const ciContent = readFileSync(ciFile, 'utf-8');
-      
+
       expect(ciContent).toContain('name: CI');
       expect(ciContent).toContain('npm test');
       expect(ciContent).toContain('npm run build');
@@ -137,7 +141,7 @@ describe('Distribution Setup', () => {
     it('should have valid GitHub Actions release workflow', () => {
       const releaseFile = join(process.cwd(), '.github/workflows/release.yml');
       const releaseContent = readFileSync(releaseFile, 'utf-8');
-      
+
       expect(releaseContent).toContain('name: Release');
       expect(releaseContent).toContain('tags:');
       expect(releaseContent).toContain('ring-alarm-card.js');
@@ -148,7 +152,7 @@ describe('Distribution Setup', () => {
     it('should have comprehensive README.md', () => {
       const readmeFile = join(process.cwd(), 'README.md');
       const readmeContent = readFileSync(readmeFile, 'utf-8');
-      
+
       expect(readmeContent).toContain('# Ring Alarm Card');
       expect(readmeContent).toContain('## Installation');
       expect(readmeContent).toContain('### HACS (Recommended)');
@@ -160,7 +164,7 @@ describe('Distribution Setup', () => {
     it('should have LICENSE file', () => {
       const licenseFile = join(process.cwd(), 'LICENSE');
       const licenseContent = readFileSync(licenseFile, 'utf-8');
-      
+
       expect(licenseContent).toContain('MIT License');
       expect(licenseContent).toContain('Ring Alarm Card');
     });
@@ -168,7 +172,7 @@ describe('Distribution Setup', () => {
     it('should have CHANGELOG.md', () => {
       const changelogFile = join(process.cwd(), 'CHANGELOG.md');
       const changelogContent = readFileSync(changelogFile, 'utf-8');
-      
+
       expect(changelogContent).toContain('# Changelog');
       expect(changelogContent).toContain('## [Unreleased]');
       expect(changelogContent).toContain('Keep a Changelog');

@@ -7,7 +7,7 @@ jest.mock('lit', () => ({
     static styles = {};
     requestUpdate = jest.fn().mockResolvedValue(undefined);
     updateComplete = Promise.resolve();
-    
+
     constructor() {
       super();
       // Create a mock shadow root using Object.defineProperty
@@ -15,7 +15,7 @@ jest.mock('lit', () => ({
       Object.defineProperty(this, 'shadowRoot', {
         value: mockShadowRoot,
         writable: false,
-        configurable: true
+        configurable: true,
       });
     }
   },
@@ -26,7 +26,7 @@ jest.mock('lit', () => ({
     return strings.join('') + values.join('');
   }),
   TemplateResult: class MockTemplateResult {},
-  PropertyValues: class MockPropertyValues extends Map {}
+  PropertyValues: class MockPropertyValues extends Map {},
 }));
 
 jest.mock('lit/decorators.js', () => ({
@@ -42,7 +42,7 @@ jest.mock('lit/decorators.js', () => ({
   },
   state: () => () => {
     // Mock state decorator
-  }
+  },
 }));
 
 // Mock Home Assistant globals

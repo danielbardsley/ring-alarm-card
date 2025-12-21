@@ -1,6 +1,6 @@
 /**
  * Ring Alarm Card Component
- * 
+ *
  * A custom Lovelace card that provides a foundation for Ring alarm system integration.
  * Currently displays a basic "Hello World" message and implements all required
  * Lovelace card interface methods.
@@ -33,7 +33,9 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       ConfigurationManager.validateConfig(config);
       this.config = ConfigurationManager.mergeConfig(config);
     } catch (error) {
-      throw new Error(`Ring Alarm Card configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Ring Alarm Card configuration error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -50,7 +52,7 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
    */
   protected override updated(changedProps: PropertyValues): void {
     super.updated(changedProps);
-    
+
     if (changedProps.has('hass')) {
       this._handleHassUpdate(changedProps.get('hass'));
     }
@@ -69,12 +71,12 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
     if (oldHass && oldHass !== this.hass) {
       // Check for state changes that might affect this card
       const hasStateChanges = hasRelevantStateChanges(oldHass, this.hass);
-      
+
       if (hasStateChanges) {
         // Trigger re-render for state changes
         this.requestUpdate();
       }
-      
+
       // Handle theme changes
       if (oldHass.selectedTheme !== this.hass.selectedTheme) {
         this._handleThemeChange();
@@ -111,16 +113,18 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
 
     return html`
       <div class="card">
-        ${this.config.title ? html`<div class="title">${this.config.title}</div>` : ''}
+        ${this.config.title
+          ? html`<div class="title">${this.config.title}</div>`
+          : ''}
         <div class="content">
-          <div class="hello-world">
-            Hello World
-          </div>
-          ${hassStatus !== 'connected' ? html`
-            <div class="hass-status">
-              <small>Home Assistant: ${hassStatus}</small>
-            </div>
-          ` : ''}
+          <div class="hello-world">Hello World</div>
+          ${hassStatus !== 'connected'
+            ? html`
+                <div class="hass-status">
+                  <small>Home Assistant: ${hassStatus}</small>
+                </div>
+              `
+            : ''}
         </div>
       </div>
     `;

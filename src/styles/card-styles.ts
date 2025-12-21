@@ -12,7 +12,8 @@ export const cardStyles = css`
   .card {
     background: var(--ha-card-background, var(--card-background-color, white));
     border-radius: var(--ha-card-border-radius, 12px);
-    border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--divider-color, #e0e0e0));
+    border: var(--ha-card-border-width, 1px) solid
+      var(--ha-card-border-color, var(--divider-color, #e0e0e0));
     box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0, 0, 0, 0.1));
     padding: 16px;
     box-sizing: border-box;

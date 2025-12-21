@@ -14,7 +14,7 @@ export function registerCard(): void {
     description: 'A custom card for Ring alarm systems',
     preview: true, // Indicates this card supports preview mode
     documentationURL: 'https://github.com/your-repo/ring-alarm-card#readme',
-    version: '0.1.0'
+    version: '0.1.0',
   });
 }
 
@@ -23,7 +23,7 @@ declare global {
   interface HTMLElementTagNameMap {
     'ring-alarm-card': import('../components/ring-alarm-card').RingAlarmCard;
   }
-  
+
   interface Window {
     customCards?: any[];
   }

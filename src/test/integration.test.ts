@@ -25,17 +25,17 @@ describe('Ring Alarm Card Integration Tests', () => {
           attributes: { friendly_name: 'Ring Alarm Status' },
           context: { id: 'test-context' },
           last_changed: '2023-01-01T00:00:00Z',
-          last_updated: '2023-01-01T00:00:00Z'
-        }
+          last_updated: '2023-01-01T00:00:00Z',
+        },
       },
       language: 'en',
       themes: {
-        'default': { primary_color: '#03a9f4' }
+        default: { primary_color: '#03a9f4' },
       },
       selectedTheme: 'default',
       panels: {},
       panelUrl: '',
-      callService: jest.fn().mockResolvedValue({})
+      callService: jest.fn().mockResolvedValue({}),
     };
   });
 
@@ -44,7 +44,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Step 1: Configure the card
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Ring Alarm System'
+        title: 'Ring Alarm System',
       };
 
       expect(() => card.setConfig(config)).not.toThrow();
@@ -66,7 +66,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Initial configuration
       const initialConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Initial Title'
+        title: 'Initial Title',
       };
 
       card.setConfig(initialConfig);
@@ -75,7 +75,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Update configuration
       const updatedConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Updated Title'
+        title: 'Updated Title',
       };
 
       expect(() => card.setConfig(updatedConfig)).not.toThrow();
@@ -89,7 +89,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Setup card
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Ring Alarm'
+        title: 'Ring Alarm',
       };
 
       card.setConfig(config);
@@ -103,16 +103,18 @@ describe('Ring Alarm Card Integration Tests', () => {
           'sensor.ring_alarm_status': {
             ...mockHass.states['sensor.ring_alarm_status'],
             state: 'armed_home',
-            last_updated: '2023-01-01T00:01:00Z'
-          }
-        }
+            last_updated: '2023-01-01T00:01:00Z',
+          },
+        },
       };
 
       expect(() => {
         card.hass = updatedHass;
       }).not.toThrow();
 
-      expect(card.hass.states['sensor.ring_alarm_status'].state).toBe('armed_home');
+      expect(card.hass.states['sensor.ring_alarm_status'].state).toBe(
+        'armed_home'
+      );
     });
   });
 
@@ -121,7 +123,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Set valid configuration first
       const validConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Valid Config'
+        title: 'Valid Config',
       };
 
       card.setConfig(validConfig);
@@ -130,7 +132,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       // Attempt invalid configuration
       const invalidConfig = {
         type: 'invalid-type',
-        title: 'Invalid Config'
+        title: 'Invalid Config',
       } as RingAlarmCardConfig;
 
       expect(() => card.setConfig(invalidConfig)).toThrow();
@@ -143,7 +145,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle missing HASS object gracefully', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Test Card'
+        title: 'Test Card',
       };
 
       card.setConfig(config);
@@ -161,7 +163,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle theme changes without errors', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Theme Test'
+        title: 'Theme Test',
       };
 
       card.setConfig(config);
@@ -173,8 +175,8 @@ describe('Ring Alarm Card Integration Tests', () => {
         selectedTheme: 'dark',
         themes: {
           ...mockHass.themes,
-          'dark': { primary_color: '#000000' }
-        }
+          dark: { primary_color: '#000000' },
+        },
       };
 
       expect(() => {
@@ -189,21 +191,25 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should be compatible with Home Assistant card loading system', () => {
       // Verify card is registered in customCards
       expect(window.customCards).toBeDefined();
-      
-      const ringCard = window.customCards?.find(card => card.type === 'ring-alarm-card');
+
+      const ringCard = window.customCards?.find(
+        card => card.type === 'ring-alarm-card'
+      );
       expect(ringCard).toBeDefined();
       expect(ringCard?.name).toBe('Ring Alarm Card');
     });
 
     it('should support dynamic card creation', () => {
       // Test creating card via customElements
-      const dynamicCard = document.createElement('ring-alarm-card') as RingAlarmCard;
+      const dynamicCard = document.createElement(
+        'ring-alarm-card'
+      ) as RingAlarmCard;
       expect(dynamicCard).toBeInstanceOf(RingAlarmCard);
 
       // Configure the dynamic card
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Dynamic Card'
+        title: 'Dynamic Card',
       };
 
       expect(() => dynamicCard.setConfig(config)).not.toThrow();
@@ -215,16 +221,20 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle service calls through HASS object', async () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Service Test'
+        title: 'Service Test',
       };
 
       card.setConfig(config);
       card.hass = mockHass;
 
       // Test service call
-      const serviceCall = card.hass.callService('alarm_control_panel', 'alarm_arm_home', {
-        entity_id: 'alarm_control_panel.ring_alarm'
-      });
+      const serviceCall = card.hass.callService(
+        'alarm_control_panel',
+        'alarm_arm_home',
+        {
+          entity_id: 'alarm_control_panel.ring_alarm',
+        }
+      );
 
       expect(serviceCall).toBeInstanceOf(Promise);
       await expect(serviceCall).resolves.toEqual({});
@@ -235,7 +245,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle multiple configuration updates efficiently', () => {
       const baseConfig: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'Performance Test'
+        title: 'Performance Test',
       };
 
       card.setConfig(baseConfig);
@@ -245,7 +255,7 @@ describe('Ring Alarm Card Integration Tests', () => {
       for (let i = 0; i < 10; i++) {
         const config: RingAlarmCardConfig = {
           ...baseConfig,
-          title: `Performance Test ${i}`
+          title: `Performance Test ${i}`,
         };
 
         expect(() => card.setConfig(config)).not.toThrow();
@@ -259,7 +269,7 @@ describe('Ring Alarm Card Integration Tests', () => {
     it('should handle multiple HASS updates efficiently', () => {
       const config: RingAlarmCardConfig = {
         type: 'custom:ring-alarm-card',
-        title: 'HASS Performance Test'
+        title: 'HASS Performance Test',
       };
 
       card.setConfig(config);
@@ -274,9 +284,9 @@ describe('Ring Alarm Card Integration Tests', () => {
             'sensor.ring_alarm_status': {
               ...mockHass.states['sensor.ring_alarm_status'],
               state: i % 2 === 0 ? 'armed_home' : 'disarmed',
-              last_updated: `2023-01-01T00:${i.toString().padStart(2, '0')}:00Z`
-            }
-          }
+              last_updated: `2023-01-01T00:${i.toString().padStart(2, '0')}:00Z`,
+            },
+          },
         };
 
         expect(() => {
@@ -285,7 +295,9 @@ describe('Ring Alarm Card Integration Tests', () => {
       }
 
       // Verify final state
-      expect(card.hass.states['sensor.ring_alarm_status'].state).toBe('disarmed');
+      expect(card.hass.states['sensor.ring_alarm_status'].state).toBe(
+        'disarmed'
+      );
     });
   });
 });

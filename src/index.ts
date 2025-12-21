@@ -10,12 +10,12 @@ import './components/ring-alarm-card';
 import { registerCard } from './registration/card-registration';
 
 // Export types for external use
-export type { 
-  RingAlarmCardConfig, 
-  HomeAssistant, 
+export type {
+  RingAlarmCardConfig,
+  HomeAssistant,
   HassEntity,
   LovelaceCard,
-  LovelaceCardConfig 
+  LovelaceCardConfig,
 } from './types';
 
 // Export the main component
