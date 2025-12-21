@@ -34,7 +34,7 @@ const gzipPlugin = () => ({
 export default {
   input: 'src/index.ts',
   output: {
-    file: 'dist/ring-alarm-card.js',
+    file: 'ring-alarm-card.js',
     format: 'es',
     sourcemap: isDevelopment,
     inlineDynamicImports: true

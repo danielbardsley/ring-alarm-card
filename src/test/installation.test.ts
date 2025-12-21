@@ -9,8 +9,7 @@ import { join } from 'path';
 
 describe('Installation and Deployment Validation', () => {
   const projectRoot = process.cwd();
-  const distPath = join(projectRoot, 'dist');
-  const bundlePath = join(distPath, 'ring-alarm-card.js');
+  const bundlePath = join(projectRoot, 'ring-alarm-card.js');
 
   describe('Distribution Package Validation', () => {
     it('should have all required files for installation', () => {
@@ -58,7 +57,7 @@ describe('Installation and Deployment Validation', () => {
       );
 
       expect(hacsConfig.name).toBe('Ring Alarm Card');
-      expect(hacsConfig.filename).toBe('dist/ring-alarm-card.js');
+      expect(hacsConfig.filename).toBe('ring-alarm-card.js');
       expect(hacsConfig.render_readme).toBe(true);
 
       // Should have proper HACS metadata
@@ -123,8 +122,8 @@ describe('Installation and Deployment Validation', () => {
       );
 
       // Should have proper main field for resource loading
-      expect(packageJson.main).toBe('dist/ring-alarm-card.js');
-      expect(packageJson.module).toBe('dist/ring-alarm-card.js');
+      expect(packageJson.main).toBe('ring-alarm-card.js');
+      expect(packageJson.module).toBe('ring-alarm-card.js');
 
       // Should have proper type declaration
       expect(packageJson.type).toBe('module');

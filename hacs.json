@@ -4,5 +4,5 @@
   "domains": [],
   "homeassistant": "2023.1.0",
   "render_readme": true,
-  "filename": "dist/ring-alarm-card.js"
+  "filename": "ring-alarm-card.js"
 }

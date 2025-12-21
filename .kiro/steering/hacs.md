@@ -10,19 +10,19 @@ For this custom Lovelace card to work with HACS (Home Assistant Community Store)
 - `info.md` - Card information for HACS UI
 - `README.md` - Installation and usage documentation
 - `LICENSE` - License file
-- `dist/ring-alarm-card.js` - Built JavaScript file (MUST be committed)
+- `ring-alarm-card.js` - Built JavaScript file (MUST be committed)
 
 ### HACS Configuration
 
 The `hacs.json` file specifies:
-- `filename`: Path to the built JS file (`dist/ring-alarm-card.js`)
+- `filename`: Path to the built JS file (`ring-alarm-card.js`)
 - `name`: Display name in HACS
 - `render_readme`: Whether to show README in HACS UI
 - `homeassistant`: Minimum Home Assistant version required
 
 ### Critical: Built Files Must Be Committed
 
-**IMPORTANT**: Unlike typical Node.js projects, HACS requires the built `dist/` folder to be committed to the repository because:
+**IMPORTANT**: Unlike typical Node.js projects, HACS requires the built JavaScript file to be committed to the repository root because:
 
 1. HACS downloads files directly from the GitHub repository
 2. HACS doesn't run build processes
@@ -33,10 +33,10 @@ The `hacs.json` file specifies:
 When making changes:
 
 1. Make code changes in `src/`
-2. Run `npm run build` to generate `dist/ring-alarm-card.js`
+2. Run `npm run build` to generate `ring-alarm-card.js`
 3. Commit both source and built files:
    ```bash
-   git add src/ dist/
+   git add src/ ring-alarm-card.js*
    git commit -m "feat: your changes"
    ```
 4. Or use the convenience script:
@@ -48,7 +48,7 @@ When making changes:
 
 1. Update version in `package.json`
 2. Run `npm run release` (builds, tests, lints)
-3. Commit all changes including `dist/`
+3. Commit all changes including built files
 4. Create and push a version tag:
    ```bash
    git tag v0.1.0
@@ -73,12 +73,12 @@ resources:
 ### Troubleshooting HACS Issues
 
 **"Repository structure not compliant"**
-- Ensure `dist/ring-alarm-card.js` exists and is committed
+- Ensure `ring-alarm-card.js` exists and is committed to repository root
 - Verify `hacs.json` has correct `filename` path
 - Check that all required files exist in repository root
 
 **"File not found"**
-- Rebuild and commit: `npm run build && git add dist/ && git commit`
+- Rebuild and commit: `npm run build && git add ring-alarm-card.js* && git commit`
 - Push changes to GitHub
 - Wait a few minutes for HACS to refresh
 

@@ -2,9 +2,9 @@ import { readFileSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
 
 describe('Distribution Setup', () => {
-  const distPath = join(process.cwd(), 'dist');
-  const mainBundle = join(distPath, 'ring-alarm-card.js');
-  const gzipBundle = join(distPath, 'ring-alarm-card.js.gz');
+  const projectRoot = process.cwd();
+  const mainBundle = join(projectRoot, 'ring-alarm-card.js');
+  const gzipBundle = join(projectRoot, 'ring-alarm-card.js.gz');
 
   describe('Build Output Generation', () => {
     it('should generate the main bundle file', () => {
@@ -53,7 +53,7 @@ describe('Distribution Setup', () => {
       const hacsContent = JSON.parse(readFileSync(hacsFile, 'utf-8'));
 
       expect(hacsContent).toHaveProperty('name');
-      expect(hacsContent).toHaveProperty('filename', 'dist/ring-alarm-card.js');
+      expect(hacsContent).toHaveProperty('filename', 'ring-alarm-card.js');
       expect(hacsContent).toHaveProperty('render_readme', true);
       expect(hacsContent.name).toBe('Ring Alarm Card');
     });
@@ -86,8 +86,8 @@ describe('Distribution Setup', () => {
       const packageFile = join(process.cwd(), 'package.json');
       const packageContent = JSON.parse(readFileSync(packageFile, 'utf-8'));
 
-      expect(packageContent.main).toBe('dist/ring-alarm-card.js');
-      expect(packageContent.module).toBe('dist/ring-alarm-card.js');
+      expect(packageContent.main).toBe('ring-alarm-card.js');
+      expect(packageContent.module).toBe('ring-alarm-card.js');
     });
 
     it('should have package.json with HACS-compatible metadata', () => {
