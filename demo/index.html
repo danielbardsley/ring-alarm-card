@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ring Alarm Card - Development</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .card-demo {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ring Alarm Card Development</h1>
+        <p>This is a development environment for the Ring Alarm Card custom component.</p>
+        
+        <div class="card-demo">
+            <h2>Basic Card Demo</h2>
+            <ring-alarm-card></ring-alarm-card>
+        </div>
+        
+        <div class="card-demo">
+            <h2>Card with Configuration</h2>
+            <ring-alarm-card id="configured-card"></ring-alarm-card>
+        </div>
+    </div>
+
+    <script type="module" src="../src/ring-alarm-card.ts"></script>
+    <script>
+        // Configure the second card with custom settings
+        document.addEventListener('DOMContentLoaded', () => {
+            const configuredCard = document.getElementById('configured-card');
+            if (configuredCard) {
+                configuredCard.setConfig({
+                    type: 'custom:ring-alarm-card',
+                    title: 'My Ring Alarm'
+                });
+            }
+        });
+    </script>
+</body>
+</html>
