@@ -58,7 +58,7 @@ describe('Installation and Deployment Validation', () => {
       );
 
       expect(hacsConfig.name).toBe('Ring Alarm Card');
-      expect(hacsConfig.filename).toBe('ring-alarm-card.js');
+      expect(hacsConfig.filename).toBe('dist/ring-alarm-card.js');
       expect(hacsConfig.render_readme).toBe(true);
 
       // Should have proper HACS metadata

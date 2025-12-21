@@ -53,7 +53,7 @@ describe('Distribution Setup', () => {
       const hacsContent = JSON.parse(readFileSync(hacsFile, 'utf-8'));
 
       expect(hacsContent).toHaveProperty('name');
-      expect(hacsContent).toHaveProperty('filename', 'ring-alarm-card.js');
+      expect(hacsContent).toHaveProperty('filename', 'dist/ring-alarm-card.js');
       expect(hacsContent).toHaveProperty('render_readme', true);
       expect(hacsContent.name).toBe('Ring Alarm Card');
     });

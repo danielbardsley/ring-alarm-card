@@ -9,6 +9,7 @@
     "start": "web-dev-server --config config/web-dev-server.config.mjs",
     "build": "rollup -c config/rollup.config.mjs",
     "build:dev": "rollup -c config/rollup.config.mjs --environment BUILD:development",
+    "build:commit": "npm run build && git add dist/ && git diff --staged --quiet || git commit -m 'chore: update built files'",
     "watch": "rollup -c config/rollup.config.mjs --watch",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write src/**/*.ts",
