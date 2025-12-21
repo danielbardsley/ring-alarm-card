@@ -1,0 +1,8 @@
+{
+  "name": "Ring Alarm Card",
+  "hacs": "1.6.0",
+  "domains": [],
+  "homeassistant": "2023.1.0",
+  "render_readme": true,
+  "filename": "ring-alarm-card.js"
+}

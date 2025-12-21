@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ring Alarm Card - Basic Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .card-container {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ring Alarm Card - Basic Integration Test</h1>
+        
+        <p>This page demonstrates the Ring Alarm Card working in a basic HTML environment.</p>
+        
+        <div class="card-container">
+            <h3>Card Instance:</h3>
+            <ring-alarm-card id="testCard"></ring-alarm-card>
+        </div>
+        
+        <div>
+            <h3>Test Controls:</h3>
+            <button onclick="configureCard()">Configure Card</button>
+            <button onclick="updateHass()">Update HASS</button>
+            <button onclick="changeTheme()">Change Theme</button>
+            <button onclick="testError()">Test Error Handling</button>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div>
+            <h3>Card Information:</h3>
+            <ul>
+                <li><strong>Tag Name:</strong> ring-alarm-card</li>
+                <li><strong>Type:</strong> custom:ring-alarm-card</li>
+                <li><strong>Framework:</strong> Lit 3.x</li>
+                <li><strong>Shadow DOM:</strong> Enabled</li>
+                <li><strong>Custom Elements:</strong> Registered</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Load the built card -->
+    <script src="../dist/ring-alarm-card.js"></script>
+    
+    <script>
+        let card;
+        let currentTheme = 'default';
+        
+        function log(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${isError ? 'error' : 'success'}`;
+        }
+        
+        function configureCard() {
+            try {
+                card = document.getElementById('testCard');
+                
+                const config = {
+                    type: 'custom:ring-alarm-card',
+                    title: 'Ring Alarm System'
+                };
+                
+                card.setConfig(config);
+                log('✓ Card configured successfully');
+            } catch (error) {
+                log(`✗ Configuration error: ${error.message}`, true);
+            }
+        }
+        
+        function updateHass() {
+            try {
+                if (!card) {
+                    log('✗ Please configure card first', true);
+                    return;
+                }
+                
+                const mockHass = {
+                    states: {
+                        'alarm_control_panel.ring': {
+                            entity_id: 'alarm_control_panel.ring',
+                            state: 'disarmed',
+                            attributes: {
+                                friendly_name: 'Ring Alarm',
+                                supported_features: 15
+                            },
+                            context: { id: 'test-context' },
+                            last_changed: new Date().toISOString(),
+                            last_updated: new Date().toISOString()
+                        }
+                    },
+                    language: 'en',
+                    themes: {
+                        'default': { primary_color: '#03a9f4' },
+                        'dark': { primary_color: '#bb86fc' }
+                    },
+                    selectedTheme: currentTheme,
+                    panels: {},
+                    panelUrl: '',
+                    callService: function(domain, service, data) {
+                        console.log(`Service called: ${domain}.${service}`, data);
+                        return Promise.resolve({});
+                    }
+                };
+                
+                card.hass = mockHass;
+                log('✓ HASS object updated successfully');
+            } catch (error) {
+                log(`✗ HASS update error: ${error.message}`, true);
+            }
+        }
+        
+        function changeTheme() {
+            try {
+                if (!card || !card.hass) {
+                    log('✗ Please configure card and update HASS first', true);
+                    return;
+                }
+                
+                currentTheme = currentTheme === 'default' ? 'dark' : 'default';
+                
+                const updatedHass = {
+                    ...card.hass,
+                    selectedTheme: currentTheme
+                };
+                
+                card.hass = updatedHass;
+                log(`✓ Theme changed to: ${currentTheme}`);
+            } catch (error) {
+                log(`✗ Theme change error: ${error.message}`, true);
+            }
+        }
+        
+        function testError() {
+            try {
+                const testCard = document.createElement('ring-alarm-card');
+                
+                const invalidConfig = {
+                    type: 'invalid-card-type',
+                    title: 'This should fail'
+                };
+                
+                testCard.setConfig(invalidConfig);
+                log('✗ Error handling failed - should have thrown an error', true);
+            } catch (error) {
+                log(`✓ Error handling working: ${error.message}`);
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            log('Page loaded. Click "Configure Card" to start testing.');
+            
+            // Verify card registration
+            const isRegistered = customElements.get('ring-alarm-card');
+            if (isRegistered) {
+                console.log('✓ Ring Alarm Card is properly registered');
+            } else {
+                console.error('✗ Ring Alarm Card registration failed');
+            }
+        });
+    </script>
+</body>
+</html>

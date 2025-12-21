@@ -39,6 +39,8 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     
     /* Source Map Options */
     "sourceMap": true,

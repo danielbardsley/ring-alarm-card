@@ -32,11 +32,9 @@ module.exports = {
       'ts-jest',
       {
         tsconfig: 'tsconfig.json',
-        useESM: true,
       },
     ],
   },
-  extensionsToTreatAsEsm: ['.ts'],
   testTimeout: 10000,
   verbose: true,
 };
