@@ -50,6 +50,21 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
   private _lastClickedAction: ControlActionType | null = null;
 
   /**
+   * Timer for smooth progress interpolation between entity updates
+   */
+  private _progressIntervalId: number | null = null;
+
+  /**
+   * Last known exitSecondsLeft value for interpolation
+   */
+  private _lastExitSecondsLeft: number = 0;
+
+  /**
+   * Timestamp when we last received an entity update
+   */
+  private _lastUpdateTime: number = 0;
+
+  /**
    * Lit component styles using CSS-in-JS
    */
   static override styles = cardStyles;
@@ -82,6 +97,17 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       super.connectedCallback();
     }
     this._initializeButtonStates();
+  }
+
+  /**
+   * Lifecycle callback when element is disconnected from DOM
+   */
+  override disconnectedCallback(): void {
+    // Clean up progress interpolation timer
+    this._stopProgressInterpolation();
+    if (super.disconnectedCallback) {
+      super.disconnectedCallback();
+    }
   }
 
   /**
@@ -327,25 +353,21 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
 
       if (isNewTransition || targetChanged) {
         // Cancel any previous transition and start fresh
-        // This handles rapid state changes by immediately applying the latest state
+        this._stopProgressInterpolation();
         this._transitionTotalDuration =
           TransitionStateManager.captureInitialDuration(exitSecondsLeft);
         this.transitionState = TransitionStateManager.createTransitionState(
           targetAction,
           exitSecondsLeft
         );
+        // Start smooth interpolation
+        this._lastExitSecondsLeft = exitSecondsLeft;
+        this._lastUpdateTime = Date.now();
+        this._startProgressInterpolation();
       } else {
-        // Continuing in same transitional state - update progress
-        const progress = TransitionStateManager.calculateProgress(
-          exitSecondsLeft,
-          this._transitionTotalDuration
-        );
-
-        this.transitionState = {
-          ...this.transitionState,
-          remainingSeconds: exitSecondsLeft,
-          progress,
-        };
+        // Continuing in same transitional state - update base values for interpolation
+        this._lastExitSecondsLeft = exitSecondsLeft;
+        this._lastUpdateTime = Date.now();
       }
     } else if (wasTransitional) {
       // Exited transitional state - clear transition immediately
@@ -354,11 +376,61 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
   }
 
   /**
+   * Start smooth progress interpolation timer
+   * Updates progress every 50ms for smooth animation
+   */
+  private _startProgressInterpolation(): void {
+    // Clear any existing interval
+    this._stopProgressInterpolation();
+
+    // Update progress every 50ms for smooth animation
+    this._progressIntervalId = window.setInterval(() => {
+      if (!this.transitionState.isTransitioning) {
+        this._stopProgressInterpolation();
+        return;
+      }
+
+      // Calculate interpolated exitSecondsLeft based on time elapsed
+      const timeSinceUpdate = (Date.now() - this._lastUpdateTime) / 1000;
+      const interpolatedSecondsLeft = Math.max(
+        0,
+        this._lastExitSecondsLeft - timeSinceUpdate
+      );
+
+      // Calculate progress
+      const progress = TransitionStateManager.calculateProgress(
+        interpolatedSecondsLeft,
+        this._transitionTotalDuration
+      );
+
+      // Update state with interpolated values
+      this.transitionState = {
+        ...this.transitionState,
+        remainingSeconds: Math.ceil(interpolatedSecondsLeft),
+        progress,
+      };
+    }, 50);
+  }
+
+  /**
+   * Stop progress interpolation timer
+   */
+  private _stopProgressInterpolation(): void {
+    if (this._progressIntervalId !== null) {
+      window.clearInterval(this._progressIntervalId);
+      this._progressIntervalId = null;
+    }
+  }
+
+  /**
    * Clear the transition state
    */
   private _clearTransitionState(): void {
+    this._stopProgressInterpolation();
     this._transitionTotalDuration = 0;
     this._lastClickedAction = null;
+    this._lastExitSecondsLeft = 0;
+    this._lastUpdateTime = 0;
     this.transitionState = TransitionStateManager.createEmptyState();
   }
 
