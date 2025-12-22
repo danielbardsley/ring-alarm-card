@@ -182,7 +182,9 @@ describe('AlarmStateManager Unit Tests', () => {
       expect(AlarmStateManager.getStateColor('armed_away')).toBe(
         '--error-color'
       );
-      expect(AlarmStateManager.getStateColor('pending')).toBe('--warning-color');
+      expect(AlarmStateManager.getStateColor('pending')).toBe(
+        '--warning-color'
+      );
       expect(AlarmStateManager.getStateColor('triggered')).toBe(
         '--error-color'
       );
