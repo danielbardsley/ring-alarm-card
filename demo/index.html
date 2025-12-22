@@ -10,6 +10,7 @@
             --success-color: #4caf50;
             --warning-color: #ff9800;
             --error-color: #f44336;
+            --info-color: #2196f3;
             --disabled-text-color: #9e9e9e;
             --card-background-color: #ffffff;
             --primary-text-color: #212121;
@@ -260,6 +261,38 @@
             </div>
         </div>
 
+        <!-- Vacation Button Demo -->
+        <div class="demo-section">
+            <h2>🏖️ Vacation Button Feature</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                The vacation button is an optional toggle that controls an input_boolean entity.
+                It operates independently of the alarm state and provides a visual indicator for vacation mode.
+            </p>
+            <div class="demo-grid">
+                <div class="card-demo">
+                    <h3>Vacation Mode Off</h3>
+                    <ring-alarm-card id="card-vacation-off"></ring-alarm-card>
+                    <div class="state-controls">
+                        <button id="toggle-vacation-off">Toggle Vacation Mode</button>
+                    </div>
+                </div>
+                <div class="card-demo">
+                    <h3>Vacation Mode On</h3>
+                    <ring-alarm-card id="card-vacation-on"></ring-alarm-card>
+                    <div class="state-controls">
+                        <button id="toggle-vacation-on">Toggle Vacation Mode</button>
+                    </div>
+                </div>
+                <div class="card-demo">
+                    <h3>Without Vacation Entity</h3>
+                    <ring-alarm-card id="card-no-vacation"></ring-alarm-card>
+                    <p style="font-size: 0.85em; color: #888; margin-top: 10px;">
+                        No vacation_entity configured - button not shown
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- Feature Summary -->
         <div class="demo-section">
             <h2>✨ Control Buttons Features</h2>
@@ -275,6 +308,8 @@
                 <li><strong>Reduced Motion:</strong> Respects prefers-reduced-motion setting for animations</li>
                 <li><strong>Theme Integration:</strong> Uses Home Assistant CSS custom properties for consistent styling</li>
                 <li><strong>Compact Mode:</strong> Smaller button size for space-constrained dashboards</li>
+                <li><strong>Vacation Button:</strong> Optional toggle for vacation mode via input_boolean entity</li>
+                <li><strong>Independent Operation:</strong> Vacation button works regardless of alarm state</li>
             </ul>
         </div>
     </div>
@@ -282,23 +317,40 @@
     <script type="module" src="../ring-alarm-card.js"></script>
     <script>
         // Mock HASS object for demo purposes
-        function createMockHass(entityState, attributes = {}) {
+        function createMockHass(entityState, attributes = {}, vacationState = null) {
+            const states = {
+                'alarm_control_panel.ring_alarm': {
+                    entity_id: 'alarm_control_panel.ring_alarm',
+                    state: entityState,
+                    attributes: {
+                        friendly_name: 'Ring Alarm',
+                        code_format: 'number',
+                        supported_features: 31,
+                        ...attributes
+                    },
+                    context: { id: 'demo' },
+                    last_changed: new Date().toISOString(),
+                    last_updated: new Date().toISOString()
+                }
+            };
+
+            // Add vacation entity if state is provided
+            if (vacationState !== null) {
+                states['input_boolean.vacation_mode'] = {
+                    entity_id: 'input_boolean.vacation_mode',
+                    state: vacationState,
+                    attributes: {
+                        friendly_name: 'Vacation Mode',
+                        icon: 'mdi:beach'
+                    },
+                    context: { id: 'demo' },
+                    last_changed: new Date().toISOString(),
+                    last_updated: new Date().toISOString()
+                };
+            }
+
             return {
-                states: {
-                    'alarm_control_panel.ring_alarm': {
-                        entity_id: 'alarm_control_panel.ring_alarm',
-                        state: entityState,
-                        attributes: {
-                            friendly_name: 'Ring Alarm',
-                            code_format: 'number',
-                            supported_features: 31,
-                            ...attributes
-                        },
-                        context: { id: 'demo' },
-                        last_changed: new Date().toISOString(),
-                        last_updated: new Date().toISOString()
-                    }
-                },
+                states,
                 callService: async (domain, service, data) => {
                     console.log(`Service called: ${domain}.${service}`, data);
                     // Simulate service call delay
@@ -414,6 +466,30 @@
                 compactCard.hass = createMockHass('disarmed');
             }
 
+            // Configure vacation demo cards
+            const vacationConfig = {
+                ...baseConfig,
+                vacation_entity: 'input_boolean.vacation_mode'
+            };
+
+            const vacationOffCard = document.getElementById('card-vacation-off');
+            if (vacationOffCard) {
+                vacationOffCard.setConfig({ ...vacationConfig, title: 'Vacation Off' });
+                vacationOffCard.hass = createMockHass('disarmed', {}, 'off');
+            }
+
+            const vacationOnCard = document.getElementById('card-vacation-on');
+            if (vacationOnCard) {
+                vacationOnCard.setConfig({ ...vacationConfig, title: 'Vacation On' });
+                vacationOnCard.hass = createMockHass('disarmed', {}, 'on');
+            }
+
+            const noVacationCard = document.getElementById('card-no-vacation');
+            if (noVacationCard) {
+                noVacationCard.setConfig({ ...baseConfig, title: 'No Vacation' });
+                noVacationCard.hass = createMockHass('disarmed');
+            }
+
             // Configure transition demo cards
             const transitionAwayCard = document.getElementById('card-transition-away');
             if (transitionAwayCard) {
@@ -488,6 +564,25 @@
 
             document.getElementById('start-countdown-pending')?.addEventListener('click', () => {
                 startCountdown('card-transition-pending', 'countdown-pending', 'countdown-pending-display', 'start-countdown-pending', 'pending', 'disarmed', 30);
+            });
+
+            // Vacation toggle button handlers
+            let vacationOffState = 'off';
+            document.getElementById('toggle-vacation-off')?.addEventListener('click', () => {
+                vacationOffState = vacationOffState === 'off' ? 'on' : 'off';
+                const card = document.getElementById('card-vacation-off');
+                if (card) {
+                    card.hass = createMockHass('disarmed', {}, vacationOffState);
+                }
+            });
+
+            let vacationOnState = 'on';
+            document.getElementById('toggle-vacation-on')?.addEventListener('click', () => {
+                vacationOnState = vacationOnState === 'off' ? 'on' : 'off';
+                const card = document.getElementById('card-vacation-on');
+                if (card) {
+                    card.hass = createMockHass('disarmed', {}, vacationOnState);
+                }
             });
         });
     </script>

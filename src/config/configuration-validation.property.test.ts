@@ -6,6 +6,7 @@
 import { describe, it, expect } from '@jest/globals';
 import fc from 'fast-check';
 import { RingAlarmCardConfig } from '../types';
+import { ConfigurationManager } from './configuration-manager';
 
 describe('Property-Based Tests for Alarm Configuration Validation', () => {
   describe('Property 3: Configuration Validation', () => {
@@ -111,6 +112,287 @@ describe('Property-Based Tests for Alarm Configuration Validation', () => {
         configWithoutEntity.entity.startsWith('alarm_control_panel.');
 
       expect(hasRequiredEntity).toBe(false);
+    });
+  });
+
+  describe('Property 1: Vacation Entity Configuration Validation', () => {
+    // Feature: vacation-button, Property 1: Vacation Entity Configuration Validation
+    // Validates: Requirements 1.2, 1.3
+
+    /**
+     * Generator for valid input_boolean entity names
+     * Entity names must start with a letter or underscore and contain only alphanumeric characters and underscores
+     */
+    const validEntityNameArb = fc
+      .tuple(
+        fc.constantFrom(
+          'a',
+          'b',
+          'c',
+          'd',
+          'e',
+          'f',
+          'g',
+          'h',
+          'i',
+          'j',
+          'k',
+          'l',
+          'm',
+          'n',
+          'o',
+          'p',
+          'q',
+          'r',
+          's',
+          't',
+          'u',
+          'v',
+          'w',
+          'x',
+          'y',
+          'z',
+          '_'
+        ),
+        fc.stringOf(
+          fc.constantFrom(
+            'a',
+            'b',
+            'c',
+            'd',
+            'e',
+            'f',
+            'g',
+            'h',
+            'i',
+            'j',
+            'k',
+            'l',
+            'm',
+            'n',
+            'o',
+            'p',
+            'q',
+            'r',
+            's',
+            't',
+            'u',
+            'v',
+            'w',
+            'x',
+            'y',
+            'z',
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            '_'
+          ),
+          { minLength: 0, maxLength: 20 }
+        )
+      )
+      .map(([first, rest]) => first + rest);
+
+    /**
+     * Generator for valid vacation entity IDs (input_boolean.*)
+     */
+    const validVacationEntityArb = validEntityNameArb.map(
+      name => `input_boolean.${name}`
+    );
+
+    /**
+     * Generator for invalid vacation entity IDs (wrong domain)
+     */
+    const invalidDomainEntityArb = fc
+      .constantFrom(
+        'switch',
+        'sensor',
+        'binary_sensor',
+        'light',
+        'automation',
+        'script'
+      )
+      .chain(domain =>
+        validEntityNameArb.map(name => `${domain}.${name}`)
+      );
+
+    /**
+     * Generator for entity names starting with a number (invalid)
+     */
+    const invalidStartWithNumberArb = fc
+      .tuple(
+        fc.constantFrom('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
+        fc.stringOf(
+          fc.constantFrom(
+            'a',
+            'b',
+            'c',
+            'd',
+            'e',
+            'f',
+            '0',
+            '1',
+            '2',
+            '_'
+          ),
+          { minLength: 0, maxLength: 10 }
+        )
+      )
+      .map(([first, rest]) => `input_boolean.${first}${rest}`);
+
+    /**
+     * Generator for entity names with invalid characters
+     */
+    const invalidCharactersEntityArb = fc
+      .tuple(
+        validEntityNameArb,
+        fc.constantFrom('-', '.', ' ', '!', '@', '#', '$', '%')
+      )
+      .map(([name, char]) => `input_boolean.${name}${char}suffix`);
+
+    it('should accept valid input_boolean entity IDs', () => {
+      fc.assert(
+        fc.property(validVacationEntityArb, entityId => {
+          const config: RingAlarmCardConfig = {
+            type: 'custom:ring-alarm-card',
+            entity: 'alarm_control_panel.ring_alarm',
+            vacation_entity: entityId,
+          };
+
+          // Should not throw for valid input_boolean entities
+          expect(() =>
+            ConfigurationManager.validateConfig(config)
+          ).not.toThrow();
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should reject entity IDs with wrong domain', () => {
+      fc.assert(
+        fc.property(invalidDomainEntityArb, entityId => {
+          const config: RingAlarmCardConfig = {
+            type: 'custom:ring-alarm-card',
+            entity: 'alarm_control_panel.ring_alarm',
+            vacation_entity: entityId,
+          };
+
+          // Should throw for non-input_boolean entities
+          expect(() => ConfigurationManager.validateConfig(config)).toThrow(
+            'must be an input_boolean entity'
+          );
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should reject entity names starting with a number', () => {
+      fc.assert(
+        fc.property(invalidStartWithNumberArb, entityId => {
+          const config: RingAlarmCardConfig = {
+            type: 'custom:ring-alarm-card',
+            entity: 'alarm_control_panel.ring_alarm',
+            vacation_entity: entityId,
+          };
+
+          // Should throw for entity names starting with a number
+          expect(() => ConfigurationManager.validateConfig(config)).toThrow(
+            'contains invalid characters'
+          );
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should reject entity names with invalid characters', () => {
+      fc.assert(
+        fc.property(invalidCharactersEntityArb, entityId => {
+          const config: RingAlarmCardConfig = {
+            type: 'custom:ring-alarm-card',
+            entity: 'alarm_control_panel.ring_alarm',
+            vacation_entity: entityId,
+          };
+
+          // Should throw for entity names with invalid characters
+          expect(() => ConfigurationManager.validateConfig(config)).toThrow();
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should accept configuration without vacation_entity', () => {
+      fc.assert(
+        fc.property(
+          fc.record({
+            title: fc.option(fc.string(), { nil: undefined }),
+            show_state_text: fc.option(fc.boolean(), { nil: undefined }),
+            compact_mode: fc.option(fc.boolean(), { nil: undefined }),
+          }),
+          options => {
+            const config: RingAlarmCardConfig = {
+              type: 'custom:ring-alarm-card',
+              entity: 'alarm_control_panel.ring_alarm',
+              ...options,
+            };
+
+            // Should not throw when vacation_entity is not provided
+            expect(() =>
+              ConfigurationManager.validateConfig(config)
+            ).not.toThrow();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should reject non-string vacation_entity values', () => {
+      fc.assert(
+        fc.property(
+          fc.oneof(
+            fc.integer(),
+            fc.boolean(),
+            fc.array(fc.string()),
+            fc.object()
+          ),
+          invalidValue => {
+            const config = {
+              type: 'custom:ring-alarm-card',
+              entity: 'alarm_control_panel.ring_alarm',
+              vacation_entity: invalidValue,
+            } as any;
+
+            // Should throw for non-string vacation_entity
+            expect(() => ConfigurationManager.validateConfig(config)).toThrow(
+              'vacation_entity must be a string'
+            );
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should reject vacation_entity missing entity name', () => {
+      const missingNameEntities = [
+        'input_boolean.',
+        'input_boolean',
+        'input_boolean. ',
+      ];
+
+      missingNameEntities.forEach(entityId => {
+        const config: RingAlarmCardConfig = {
+          type: 'custom:ring-alarm-card',
+          entity: 'alarm_control_panel.ring_alarm',
+          vacation_entity: entityId,
+        };
+
+        expect(() => ConfigurationManager.validateConfig(config)).toThrow();
+      });
     });
   });
 });

@@ -120,6 +120,89 @@ describe('ConfigurationManager', () => {
         ConfigurationManager.validateConfig(configWithInvalidCompactMode)
       ).toThrow('Ring Alarm Card: compact_mode must be true or false');
     });
+
+    it('should accept valid vacation_entity configuration', () => {
+      const validConfig: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+        vacation_entity: 'input_boolean.vacation_mode',
+      };
+
+      expect(() =>
+        ConfigurationManager.validateConfig(validConfig)
+      ).not.toThrow();
+    });
+
+    it('should accept configuration without vacation_entity', () => {
+      const validConfig: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      expect(() =>
+        ConfigurationManager.validateConfig(validConfig)
+      ).not.toThrow();
+    });
+
+    it('should reject non-string vacation_entity', () => {
+      const configWithInvalidVacationEntity = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+        vacation_entity: 123,
+      } as any;
+
+      expect(() =>
+        ConfigurationManager.validateConfig(configWithInvalidVacationEntity)
+      ).toThrow('Ring Alarm Card: vacation_entity must be a string');
+    });
+
+    it('should reject vacation_entity with wrong domain', () => {
+      const configWithWrongDomain: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+        vacation_entity: 'switch.vacation_mode',
+      };
+
+      expect(() =>
+        ConfigurationManager.validateConfig(configWithWrongDomain)
+      ).toThrow('must be an input_boolean entity');
+    });
+
+    it('should reject vacation_entity missing entity name', () => {
+      const configWithMissingName: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+        vacation_entity: 'input_boolean.',
+      };
+
+      expect(() =>
+        ConfigurationManager.validateConfig(configWithMissingName)
+      ).toThrow('is missing the entity name');
+    });
+
+    it('should reject vacation_entity with invalid characters', () => {
+      const configWithInvalidChars: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+        vacation_entity: 'input_boolean.vacation-mode',
+      };
+
+      expect(() =>
+        ConfigurationManager.validateConfig(configWithInvalidChars)
+      ).toThrow('contains invalid characters');
+    });
+
+    it('should reject vacation_entity starting with number', () => {
+      const configWithNumberStart: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+        vacation_entity: 'input_boolean.123vacation',
+      };
+
+      expect(() =>
+        ConfigurationManager.validateConfig(configWithNumberStart)
+      ).toThrow('contains invalid characters');
+    });
   });
 
   describe('validateEntityExists', () => {

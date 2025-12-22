@@ -124,6 +124,17 @@ export const buttonStyles = css`
     color: var(--text-primary-color, #fff);
   }
 
+  /* Active state - Vacation (info/blue) */
+  .control-button.active.vacation {
+    background: var(--info-color, #03a9f4);
+    border-color: var(--info-color, #03a9f4);
+    color: var(--text-primary-color, #fff);
+  }
+
+  .control-button.active.vacation .control-button-icon {
+    color: var(--text-primary-color, #fff);
+  }
+
   /* Disabled state */
   .control-button:disabled,
   .control-button.disabled {

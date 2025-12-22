@@ -954,3 +954,296 @@ describe('Alarm State Transitions Property Tests', () => {
     });
   });
 });
+
+/**
+ * Property-based tests for Vacation Button feature
+ * Feature: vacation-button
+ */
+import { VacationButtonManager } from './vacation-button-manager';
+
+describe('Vacation Button Property Tests', () => {
+  /**
+   * Property 2: Conditional Vacation Button Rendering
+   * Feature: vacation-button, Property 2: Conditional Vacation Button Rendering
+   * Validates: Requirements 1.4, 2.1
+   *
+   * For any valid card configuration, the vacation button SHALL be rendered
+   * if and only if vacation_entity is provided and is a valid input_boolean entity ID.
+   */
+  describe('Property 2: Conditional Vacation Button Rendering', () => {
+    // Generator for valid vacation button states
+    const vacationButtonStateArb = fc.record({
+      isActive: fc.boolean(),
+      isLoading: fc.boolean(),
+      hasError: fc.boolean(),
+      isDisabled: fc.boolean(),
+    });
+
+    // Generator for valid alarm states
+    const alarmStateArb = fc.constantFrom(
+      'disarmed' as const,
+      'armed_home' as const,
+      'armed_away' as const,
+      'arming' as const,
+      'disarming' as const,
+      'pending' as const,
+      'triggered' as const
+    );
+
+    it('should render vacation button when vacationState is provided', () => {
+      // Feature: vacation-button, Property 2: Conditional Vacation Button Rendering
+      // Validates: Requirements 1.4, 2.1
+      fc.assert(
+        fc.property(vacationButtonStateArb, vacationState => {
+          // Render vacation button
+          const result = AlarmDisplayRenderer.renderVacationButton(
+            vacationState,
+            () => {}
+          );
+          const htmlString = result.getHTML?.() || result.toString();
+
+          // Verify vacation button is rendered with correct structure
+          expect(htmlString).toContain('control-button');
+          expect(htmlString).toContain('Vacation');
+
+          // Verify icon is present (either beach or loading)
+          if (vacationState.isLoading) {
+            expect(htmlString).toContain('mdi:loading');
+          } else {
+            expect(htmlString).toContain('mdi:beach');
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should not render vacation button when vacationState is null in renderControlButtonsWithVacation', () => {
+      // Feature: vacation-button, Property 2: Conditional Vacation Button Rendering
+      // Validates: Requirements 1.4, 2.1
+      fc.assert(
+        fc.property(alarmStateArb, alarmStateValue => {
+          const alarmState: AlarmState = {
+            state: alarmStateValue,
+            icon: 'mdi:shield',
+            color: '--primary-color',
+            label: 'Test',
+            isAnimated: false,
+          };
+
+          // Render control buttons with null vacation state
+          const result = AlarmDisplayRenderer.renderControlButtonsWithVacation(
+            alarmState,
+            new Map(),
+            null, // No vacation state
+            () => {},
+            () => {}
+          );
+          const htmlString = result.getHTML?.() || result.toString();
+
+          // Verify vacation button is NOT rendered
+          expect(htmlString).not.toContain('Vacation');
+          expect(htmlString).not.toContain('mdi:beach');
+
+          // Verify alarm buttons are still rendered
+          expect(htmlString).toContain('control-buttons');
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should render vacation button when vacationState is provided in renderControlButtonsWithVacation', () => {
+      // Feature: vacation-button, Property 2: Conditional Vacation Button Rendering
+      // Validates: Requirements 1.4, 2.1
+      fc.assert(
+        fc.property(
+          alarmStateArb,
+          vacationButtonStateArb,
+          (alarmStateValue, vacationState) => {
+            const alarmState: AlarmState = {
+              state: alarmStateValue,
+              icon: 'mdi:shield',
+              color: '--primary-color',
+              label: 'Test',
+              isAnimated: false,
+            };
+
+            // Render control buttons with vacation state
+            const result =
+              AlarmDisplayRenderer.renderControlButtonsWithVacation(
+                alarmState,
+                new Map(),
+                vacationState,
+                () => {},
+                () => {}
+              );
+            const htmlString = result.getHTML?.() || result.toString();
+
+            // Verify vacation button IS rendered
+            expect(htmlString).toContain('Vacation');
+
+            // Verify icon is present (either beach or loading)
+            if (vacationState.isLoading) {
+              expect(htmlString).toContain('mdi:loading');
+            } else {
+              expect(htmlString).toContain('mdi:beach');
+            }
+
+            // Verify alarm buttons are also rendered
+            expect(htmlString).toContain('control-buttons');
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should apply active class when vacation is active', () => {
+      // Feature: vacation-button, Property 2: Conditional Vacation Button Rendering
+      // Validates: Requirements 2.1
+      fc.assert(
+        fc.property(
+          fc.record({
+            isActive: fc.constant(true),
+            isLoading: fc.boolean(),
+            hasError: fc.boolean(),
+            isDisabled: fc.boolean(),
+          }),
+          vacationState => {
+            const result = AlarmDisplayRenderer.renderVacationButton(
+              vacationState,
+              () => {}
+            );
+            const htmlString = result.getHTML?.() || result.toString();
+
+            // Verify active and vacation classes are present
+            expect(htmlString).toContain('active');
+            expect(htmlString).toContain('vacation');
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should apply inactive class when vacation is not active', () => {
+      // Feature: vacation-button, Property 2: Conditional Vacation Button Rendering
+      // Validates: Requirements 2.1
+      fc.assert(
+        fc.property(
+          fc.record({
+            isActive: fc.constant(false),
+            isLoading: fc.boolean(),
+            hasError: fc.boolean(),
+            isDisabled: fc.boolean(),
+          }),
+          vacationState => {
+            const result = AlarmDisplayRenderer.renderVacationButton(
+              vacationState,
+              () => {}
+            );
+            const htmlString = result.getHTML?.() || result.toString();
+
+            // Verify inactive class is present
+            expect(htmlString).toContain('inactive');
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should apply loading class when vacation button is loading', () => {
+      fc.assert(
+        fc.property(
+          fc.record({
+            isActive: fc.boolean(),
+            isLoading: fc.constant(true),
+            hasError: fc.boolean(),
+            isDisabled: fc.boolean(),
+          }),
+          vacationState => {
+            const result = AlarmDisplayRenderer.renderVacationButton(
+              vacationState,
+              () => {}
+            );
+            const htmlString = result.getHTML?.() || result.toString();
+
+            // Verify loading class and icon
+            expect(htmlString).toContain('loading');
+            expect(htmlString).toContain('mdi:loading');
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should apply disabled class when vacation button is disabled', () => {
+      fc.assert(
+        fc.property(
+          fc.record({
+            isActive: fc.boolean(),
+            isLoading: fc.boolean(),
+            hasError: fc.boolean(),
+            isDisabled: fc.constant(true),
+          }),
+          vacationState => {
+            const result = AlarmDisplayRenderer.renderVacationButton(
+              vacationState,
+              () => {}
+            );
+            const htmlString = result.getHTML?.() || result.toString();
+
+            // Verify disabled class is present
+            expect(htmlString).toContain('disabled');
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should apply error class when vacation button has error', () => {
+      fc.assert(
+        fc.property(
+          fc.record({
+            isActive: fc.boolean(),
+            isLoading: fc.boolean(),
+            hasError: fc.constant(true),
+            isDisabled: fc.boolean(),
+          }),
+          vacationState => {
+            const result = AlarmDisplayRenderer.renderVacationButton(
+              vacationState,
+              () => {}
+            );
+            const htmlString = result.getHTML?.() || result.toString();
+
+            // Verify error class
+            expect(htmlString).toContain('error');
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should use correct display properties from VacationButtonManager', () => {
+      // Verify display properties are consistent
+      const displayProps = VacationButtonManager.getDisplayProperties();
+
+      fc.assert(
+        fc.property(vacationButtonStateArb, vacationState => {
+          const result = AlarmDisplayRenderer.renderVacationButton(
+            vacationState,
+            () => {}
+          );
+          const htmlString = result.getHTML?.() || result.toString();
+
+          // Verify label from display properties
+          expect(htmlString).toContain(displayProps.label);
+
+          // Icon should be either the display icon or loading icon
+          if (!vacationState.isLoading) {
+            expect(htmlString).toContain(displayProps.icon);
+          }
+        }),
+        { numRuns: 100 }
+      );
+    });
+  });
+});

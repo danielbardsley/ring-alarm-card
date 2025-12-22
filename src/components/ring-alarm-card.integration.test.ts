@@ -782,11 +782,13 @@ describe('Transition State Integration', () => {
       expect((element as any).transitionState.totalDuration).toBe(30); // Should remain unchanged
 
       // Wait for the interpolation interval to update progress (50ms interval)
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
       await element.updateComplete;
 
       // Now progress should be approximately 50% (may vary slightly due to timing)
-      expect((element as any).transitionState.progress).toBeGreaterThanOrEqual(49);
+      expect((element as any).transitionState.progress).toBeGreaterThanOrEqual(
+        49
+      );
       expect((element as any).transitionState.progress).toBeLessThanOrEqual(52);
 
       // Update to near completion (3 seconds left)
@@ -810,11 +812,13 @@ describe('Transition State Integration', () => {
       await element.updateComplete;
 
       // Wait for the interpolation interval to update progress
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
       await element.updateComplete;
 
       // Verify progress is approximately 90% (may vary slightly due to timing)
-      expect((element as any).transitionState.progress).toBeGreaterThanOrEqual(89);
+      expect((element as any).transitionState.progress).toBeGreaterThanOrEqual(
+        89
+      );
       expect((element as any).transitionState.progress).toBeLessThanOrEqual(92);
       expect((element as any)._lastExitSecondsLeft).toBe(3);
     });

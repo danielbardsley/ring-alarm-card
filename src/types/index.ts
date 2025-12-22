@@ -39,6 +39,7 @@ export interface RingAlarmCardConfig extends LovelaceCardConfig {
   title?: string;
   show_state_text?: boolean; // Default: true
   compact_mode?: boolean; // Default: false
+  vacation_entity?: string; // Optional: input_boolean entity for vacation mode
 }
 
 // Lovelace card interface

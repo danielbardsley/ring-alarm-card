@@ -10,6 +10,10 @@ import {
   ControlAction,
   ControlActionType,
 } from './alarm-control-manager';
+import {
+  VacationButtonManager,
+  VacationButtonState,
+} from './vacation-button-manager';
 
 export class AlarmDisplayRenderer {
   /**
@@ -490,5 +494,149 @@ compact_mode: false</pre
     }
 
     return baseLabel;
+  }
+
+  /**
+   * Render the vacation button
+   * @param vacationState - Current vacation button state
+   * @param onClick - Callback when button is clicked
+   * @returns TemplateResult for vacation button
+   */
+  static renderVacationButton(
+    vacationState: VacationButtonState,
+    onClick: () => void
+  ): TemplateResult {
+    const displayProps = VacationButtonManager.getDisplayProperties();
+
+    // Build CSS classes based on state
+    const classes: string[] = ['control-button'];
+
+    if (vacationState.isActive) {
+      classes.push('active', 'vacation');
+    } else {
+      classes.push('inactive');
+    }
+
+    if (vacationState.isLoading) {
+      classes.push('loading');
+    }
+
+    if (vacationState.isDisabled) {
+      classes.push('disabled');
+    }
+
+    if (vacationState.hasError) {
+      classes.push('error');
+    }
+
+    // Generate ARIA label
+    const ariaLabel = vacationState.isActive
+      ? 'Vacation mode is on. Click to turn off.'
+      : 'Vacation mode is off. Click to turn on.';
+
+    // Determine icon - use loading icon if loading
+    const icon = vacationState.isLoading ? 'mdi:loading' : displayProps.icon;
+
+    // Handle click - only if not disabled and not loading
+    const handleClick = () => {
+      if (!vacationState.isDisabled && !vacationState.isLoading) {
+        onClick();
+      }
+    };
+
+    return html`
+      <button
+        class="${classes.join(' ')}"
+        aria-label="${ariaLabel}"
+        aria-pressed="${vacationState.isActive ? 'true' : 'false'}"
+        aria-disabled="${vacationState.isDisabled ? 'true' : 'false'}"
+        ?disabled="${vacationState.isDisabled}"
+        @click="${handleClick}"
+      >
+        <ha-icon
+          class="control-button-icon"
+          icon="${icon}"
+          aria-hidden="true"
+        ></ha-icon>
+        <span class="control-button-label">${displayProps.label}</span>
+      </button>
+    `;
+  }
+
+  /**
+   * Render control buttons row with optional vacation button
+   * @param alarmState - The current alarm state (undefined if unavailable)
+   * @param buttonStates - Map of button states for each action type
+   * @param vacationState - Vacation button state (null if not configured)
+   * @param onAlarmButtonClick - Callback function when an alarm button is clicked
+   * @param onVacationClick - Callback function when vacation button is clicked
+   * @param liveAnnouncement - Optional announcement for ARIA live region
+   * @returns TemplateResult for control buttons row with optional vacation button
+   */
+  static renderControlButtonsWithVacation(
+    alarmState: AlarmState | undefined,
+    buttonStates: Map<ControlActionType, ControlButtonState>,
+    vacationState: VacationButtonState | null,
+    onAlarmButtonClick: (action: ControlActionType) => void,
+    onVacationClick: () => void,
+    liveAnnouncement?: string
+  ): TemplateResult {
+    const actions = AlarmControlManager.getControlActions();
+    const activeAction = alarmState
+      ? AlarmControlManager.getActiveAction(alarmState.state)
+      : null;
+    const controlsDisabled = AlarmControlManager.areControlsDisabled(
+      alarmState?.state
+    );
+
+    return html`
+      <div
+        class="control-buttons"
+        role="group"
+        aria-label="Alarm control buttons"
+      >
+        ${actions.map(action => {
+          const buttonState = buttonStates.get(action.type) || {
+            isActive: false,
+            isLoading: false,
+            isDisabled: false,
+            hasError: false,
+          };
+
+          // Merge computed state with provided state
+          const computedState: ControlButtonState = {
+            isActive: activeAction === action.type,
+            isLoading: buttonState.isLoading,
+            isDisabled: controlsDisabled || buttonState.isDisabled,
+            hasError: buttonState.hasError,
+          };
+
+          // Add optional transition properties if present
+          if (buttonState.isTransitionTarget !== undefined) {
+            computedState.isTransitionTarget = buttonState.isTransitionTarget;
+          }
+          if (buttonState.transitionProgress !== undefined) {
+            computedState.transitionProgress = buttonState.transitionProgress;
+          }
+          if (buttonState.transitionRemainingSeconds !== undefined) {
+            computedState.transitionRemainingSeconds =
+              buttonState.transitionRemainingSeconds;
+          }
+
+          return AlarmDisplayRenderer.renderControlButton(
+            action,
+            computedState,
+            () => onAlarmButtonClick(action.type)
+          );
+        })}
+        ${vacationState !== null
+          ? AlarmDisplayRenderer.renderVacationButton(
+              vacationState,
+              onVacationClick
+            )
+          : ''}
+        ${AlarmDisplayRenderer.renderLiveRegion(liveAnnouncement)}
+      </div>
+    `;
   }
 }

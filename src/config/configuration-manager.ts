@@ -108,6 +108,43 @@ export class ConfigurationManager {
         `Ring Alarm Card: title must be a string, but received ${typeof config.title}. Example: "title: My Ring Alarm"`
       );
     }
+
+    // Validate vacation_entity if provided
+    if (config.vacation_entity !== undefined) {
+      if (typeof config.vacation_entity !== 'string') {
+        throw new Error(
+          `Ring Alarm Card: vacation_entity must be a string, but received ${typeof config.vacation_entity}. Example: "vacation_entity: input_boolean.vacation_mode"`
+        );
+      }
+
+      // Validate entity ID format matches input_boolean.* pattern
+      if (!config.vacation_entity.startsWith('input_boolean.')) {
+        throw new Error(
+          `Ring Alarm Card: vacation_entity "${config.vacation_entity}" must be an input_boolean entity. Expected format: "input_boolean.vacation_mode". Please create an input_boolean helper in Home Assistant.`
+        );
+      }
+
+      // Validate entity has a name after the domain
+      const vacationEntityParts = config.vacation_entity.split('.');
+      if (
+        vacationEntityParts.length !== 2 ||
+        !vacationEntityParts[1] ||
+        vacationEntityParts[1].trim() === ''
+      ) {
+        throw new Error(
+          `Ring Alarm Card: vacation_entity "${config.vacation_entity}" is missing the entity name. Expected format: "input_boolean.vacation_mode".`
+        );
+      }
+
+      // Validate entity name contains only valid characters (letters, numbers, underscores)
+      const vacationEntityName = vacationEntityParts[1];
+      const validVacationEntityNamePattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+      if (!validVacationEntityNamePattern.test(vacationEntityName)) {
+        throw new Error(
+          `Ring Alarm Card: vacation_entity name "${vacationEntityName}" contains invalid characters. Entity names must start with a letter or underscore and contain only letters, numbers, and underscores. Example: "input_boolean.vacation_mode"`
+        );
+      }
+    }
   }
 
   /**
