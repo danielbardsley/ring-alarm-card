@@ -50,9 +50,13 @@ export const alarmStyles = css`
   }
 
   .alarm-icon {
-    font-size: 2.5rem;
+    --mdc-icon-size: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: color 0.3s ease;
     flex-shrink: 0;
+    line-height: 1;
   }
 
   .alarm-text {
@@ -60,6 +64,9 @@ export const alarmStyles = css`
     font-weight: 500;
     text-transform: capitalize;
     color: var(--alarm-text-primary);
+    line-height: 1;
+    display: flex;
+    align-items: center;
   }
 
   /* State-specific colors */
@@ -154,7 +161,7 @@ export const alarmStyles = css`
   }
 
   .compact .alarm-icon {
-    font-size: 1.8rem;
+    --mdc-icon-size: 1.8rem;
   }
 
   .compact .alarm-text {
