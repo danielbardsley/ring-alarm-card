@@ -41,7 +41,7 @@ export class TransitionStateManager {
    * For 'arming' states, determines target based on entity attributes
    * For 'pending' states, returns the currently armed state
    * @param alarmState - The current alarm state
-   * @param entityAttributes - The entity attributes containing next_state or similar
+   * @param entityAttributes - The entity attributes containing targetState or similar
    * @returns The target action type or null if not transitional
    */
   static getTransitionTarget(
@@ -54,19 +54,61 @@ export class TransitionStateManager {
 
     if (alarmState === 'arming') {
       // Determine target from entity attributes
-      const nextState = entityAttributes.next_state as string | undefined;
-      if (nextState === 'armed_home') {
-        return 'arm_home';
+      // Ring integration uses 'targetState', others may use 'next_state'
+      const targetState =
+        (entityAttributes.targetState as string | undefined) ??
+        (entityAttributes.target_state as string | undefined) ??
+        (entityAttributes.next_state as string | undefined) ??
+        (entityAttributes.arm_mode as string | undefined) ??
+        (entityAttributes.mode as string | undefined);
+
+      if (targetState) {
+        // Handle various formats: 'armed_home', 'home', 'arm_home'
+        const normalizedState = targetState.toLowerCase();
+        if (
+          normalizedState === 'armed_home' ||
+          normalizedState === 'home' ||
+          normalizedState === 'arm_home'
+        ) {
+          return 'arm_home';
+        }
+        if (
+          normalizedState === 'armed_away' ||
+          normalizedState === 'away' ||
+          normalizedState === 'arm_away'
+        ) {
+          return 'arm_away';
+        }
       }
-      if (nextState === 'armed_away') {
-        return 'arm_away';
-      }
-      // Default to arm_away if no next_state attribute
+
+      // Default to arm_away if no target can be determined
       return 'arm_away';
     }
 
     if (alarmState === 'pending') {
-      // For pending (entry delay), return the currently armed state
+      // For pending (entry delay), check targetState first (Ring uses this)
+      // then fall back to previous_state
+      const targetState =
+        (entityAttributes.targetState as string | undefined) ??
+        (entityAttributes.target_state as string | undefined);
+
+      if (targetState) {
+        const normalizedState = targetState.toLowerCase();
+        if (
+          normalizedState === 'armed_home' ||
+          normalizedState === 'home'
+        ) {
+          return 'arm_home';
+        }
+        if (
+          normalizedState === 'armed_away' ||
+          normalizedState === 'away'
+        ) {
+          return 'arm_away';
+        }
+      }
+
+      // Fall back to previous_state
       const previousState = entityAttributes.previous_state as
         | string
         | undefined;
@@ -76,7 +118,7 @@ export class TransitionStateManager {
       if (previousState === 'armed_away') {
         return 'arm_away';
       }
-      // Default to arm_away if no previous_state attribute
+      // Default to arm_away if no state attribute found
       return 'arm_away';
     }
 

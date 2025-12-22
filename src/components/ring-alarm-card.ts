@@ -44,6 +44,12 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
   private _transitionTotalDuration: number = 0;
 
   /**
+   * Track the last action clicked by the user
+   * Used to determine transition target when entity attributes don't provide it
+   */
+  private _lastClickedAction: ControlActionType | null = null;
+
+  /**
    * Lit component styles using CSS-in-JS
    */
   static override styles = cardStyles;
@@ -119,6 +125,9 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
     if (!this.hass || !this.config?.entity) {
       return;
     }
+
+    // Track the last clicked action for transition target detection
+    this._lastClickedAction = action;
 
     // Set loading state
     this._updateButtonState(action, { isLoading: true, hasError: false });
@@ -281,18 +290,33 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       ? TransitionStateManager.isTransitionalState(previousState)
       : false;
 
-    // Get exitSecondsLeft from entity attributes
+    // Get exitSecondsLeft from entity attributes - Ring uses camelCase
     const exitSecondsLeft =
-      (entityAttributes.exit_seconds_left as number) ??
       (entityAttributes.exitSecondsLeft as number) ??
+      (entityAttributes.exit_seconds_left as number) ??
+      (entityAttributes.delay as number) ??
+      (entityAttributes.seconds_left as number) ??
       0;
 
     if (isCurrentlyTransitional) {
       // Entering or continuing a transitional state
-      const targetAction = TransitionStateManager.getTransitionTarget(
+      let targetAction = TransitionStateManager.getTransitionTarget(
         currentState,
         entityAttributes
       );
+
+      // Use last clicked action as fallback for arming states
+      if (
+        currentState === 'arming' &&
+        targetAction === 'arm_away' &&
+        this._lastClickedAction &&
+        (this._lastClickedAction === 'arm_home' ||
+          this._lastClickedAction === 'arm_away')
+      ) {
+        // If we have a recent click and the default is arm_away,
+        // use the clicked action instead (more reliable)
+        targetAction = this._lastClickedAction;
+      }
 
       // Check if this is a new transition or a change in target
       const isNewTransition =
@@ -334,6 +358,7 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
    */
   private _clearTransitionState(): void {
     this._transitionTotalDuration = 0;
+    this._lastClickedAction = null;
     this.transitionState = TransitionStateManager.createEmptyState();
   }
 
