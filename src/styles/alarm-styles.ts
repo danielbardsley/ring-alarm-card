@@ -44,7 +44,7 @@ export const alarmStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 12px 24px 24px;
     gap: 12px;
     min-height: 60px;
   }
