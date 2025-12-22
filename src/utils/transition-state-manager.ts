@@ -94,16 +94,10 @@ export class TransitionStateManager {
 
       if (targetState) {
         const normalizedState = targetState.toLowerCase();
-        if (
-          normalizedState === 'armed_home' ||
-          normalizedState === 'home'
-        ) {
+        if (normalizedState === 'armed_home' || normalizedState === 'home') {
           return 'arm_home';
         }
-        if (
-          normalizedState === 'armed_away' ||
-          normalizedState === 'away'
-        ) {
+        if (normalizedState === 'armed_away' || normalizedState === 'away') {
           return 'arm_away';
         }
       }
