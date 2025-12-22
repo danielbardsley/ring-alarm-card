@@ -218,9 +218,7 @@ describe('Property-Based Tests for Alarm Configuration Validation', () => {
         'automation',
         'script'
       )
-      .chain(domain =>
-        validEntityNameArb.map(name => `${domain}.${name}`)
-      );
+      .chain(domain => validEntityNameArb.map(name => `${domain}.${name}`));
 
     /**
      * Generator for entity names starting with a number (invalid)
@@ -229,18 +227,7 @@ describe('Property-Based Tests for Alarm Configuration Validation', () => {
       .tuple(
         fc.constantFrom('0', '1', '2', '3', '4', '5', '6', '7', '8', '9'),
         fc.stringOf(
-          fc.constantFrom(
-            'a',
-            'b',
-            'c',
-            'd',
-            'e',
-            'f',
-            '0',
-            '1',
-            '2',
-            '_'
-          ),
+          fc.constantFrom('a', 'b', 'c', 'd', 'e', 'f', '0', '1', '2', '_'),
           { minLength: 0, maxLength: 10 }
         )
       )

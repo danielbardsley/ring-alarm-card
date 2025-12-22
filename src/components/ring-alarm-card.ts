@@ -262,11 +262,7 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       // Check for vacation entity state changes
       if (this.config?.vacation_entity) {
         if (
-          hasEntityStateChanged(
-            oldHass,
-            this.hass,
-            this.config.vacation_entity
-          )
+          hasEntityStateChanged(oldHass, this.hass, this.config.vacation_entity)
         ) {
           this._handleVacationEntityStateChange();
         }

@@ -1,10 +1,10 @@
 /**
  * Property-based tests for RingAlarmCard vacation button integration
  * Feature: vacation-button
- * 
+ *
  * Property 5: Alarm State Independence
  * Validates: Requirements 5.1, 5.3
- * 
+ *
  * Property 6: State Isolation
  * Validates: Requirements 5.2, 5.4
  */
@@ -233,7 +233,6 @@ describe('Property-Based Tests for Vacation Button Integration', () => {
     });
   });
 
-
   describe('Property 6: State Isolation', () => {
     /**
      * Property 6: State Isolation
@@ -352,7 +351,9 @@ describe('Property-Based Tests for Vacation Button Integration', () => {
               };
 
               // Click an alarm button
-              await (testElement as any)._handleControlButtonClick(buttonAction);
+              await (testElement as any)._handleControlButtonClick(
+                buttonAction
+              );
 
               await testElement.updateComplete;
 

@@ -23,10 +23,13 @@ const invalidEntityStateArb = fc.constantFrom(
 const validEntityNameArb = fc
   .tuple(
     fc.constantFrom('a', 'b', 'c', '_'),
-    fc.stringOf(fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_'.split('')), {
-      minLength: 0,
-      maxLength: 20,
-    })
+    fc.stringOf(
+      fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789_'.split('')),
+      {
+        minLength: 0,
+        maxLength: 20,
+      }
+    )
   )
   .map(([first, rest]) => `input_boolean.${first}${rest}`);
 
@@ -107,7 +110,8 @@ describe('Property-Based Tests for VacationButtonManager', () => {
       // createStateFromEntity should have isActive matching isVacationActive
       fc.assert(
         fc.property(validEntityStateArb, state => {
-          const buttonState = VacationButtonManager.createStateFromEntity(state);
+          const buttonState =
+            VacationButtonManager.createStateFromEntity(state);
           const expectedActive = VacationButtonManager.isVacationActive(state);
           expect(buttonState.isActive).toBe(expectedActive);
         }),
