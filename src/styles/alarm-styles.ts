@@ -11,7 +11,12 @@ export const alarmStyles = css`
     --alarm-disarmed-color: var(--success-color, #4caf50);
     --alarm-armed-home-color: var(--warning-color, #ff9800);
     --alarm-armed-away-color: var(--error-color, #f44336);
-    --alarm-pending-color: var(--info-color, #2196f3);
+    --alarm-armed-night-color: var(--info-color, #2196f3);
+    --alarm-armed-vacation-color: var(--warning-color, #ff9800);
+    --alarm-armed-custom-color: var(--warning-color, #ff9800);
+    --alarm-arming-color: var(--info-color, #2196f3);
+    --alarm-disarming-color: var(--info-color, #2196f3);
+    --alarm-pending-color: var(--warning-color, #ff9800);
     --alarm-triggered-color: var(--error-color, #f44336);
     --alarm-unknown-color: var(--disabled-text-color, #9e9e9e);
 
@@ -70,6 +75,26 @@ export const alarmStyles = css`
     color: var(--alarm-armed-away-color);
   }
 
+  .alarm-armed-night .alarm-icon {
+    color: var(--alarm-armed-night-color);
+  }
+
+  .alarm-armed-vacation .alarm-icon {
+    color: var(--alarm-armed-vacation-color);
+  }
+
+  .alarm-armed-custom-bypass .alarm-icon {
+    color: var(--alarm-armed-custom-color);
+  }
+
+  .alarm-arming .alarm-icon {
+    color: var(--alarm-arming-color);
+  }
+
+  .alarm-disarming .alarm-icon {
+    color: var(--alarm-disarming-color);
+  }
+
   .alarm-pending .alarm-icon {
     color: var(--alarm-pending-color);
   }
@@ -111,7 +136,9 @@ export const alarmStyles = css`
   }
 
   /* Apply animations to specific states */
-  .alarm-pending .alarm-icon {
+  .alarm-pending .alarm-icon,
+  .alarm-arming .alarm-icon,
+  .alarm-disarming .alarm-icon {
     animation: pulse 2s infinite;
   }
 
@@ -251,6 +278,8 @@ export const alarmStyles = css`
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
     .alarm-pending .alarm-icon,
+    .alarm-arming .alarm-icon,
+    .alarm-disarming .alarm-icon,
     .alarm-triggered .alarm-icon,
     .alarm-loading-icon {
       animation: none;

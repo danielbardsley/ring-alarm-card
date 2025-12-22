@@ -87,7 +87,7 @@ describe('AlarmStateManager Unit Tests', () => {
       expect(result).toEqual({
         state: 'pending',
         icon: 'mdi:clock-outline',
-        color: '--info-color',
+        color: '--warning-color',
         label: 'Pending',
         isAnimated: true,
       });
@@ -182,7 +182,7 @@ describe('AlarmStateManager Unit Tests', () => {
       expect(AlarmStateManager.getStateColor('armed_away')).toBe(
         '--error-color'
       );
-      expect(AlarmStateManager.getStateColor('pending')).toBe('--info-color');
+      expect(AlarmStateManager.getStateColor('pending')).toBe('--warning-color');
       expect(AlarmStateManager.getStateColor('triggered')).toBe(
         '--error-color'
       );

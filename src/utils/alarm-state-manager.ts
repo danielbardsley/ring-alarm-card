@@ -41,11 +41,56 @@ export class AlarmStateManager {
           isAnimated: false,
         };
 
+      case 'armed_night':
+        return {
+          state: 'armed_night',
+          icon: 'mdi:weather-night',
+          color: '--info-color',
+          label: 'Armed Night',
+          isAnimated: false,
+        };
+
+      case 'armed_vacation':
+        return {
+          state: 'armed_vacation',
+          icon: 'mdi:airplane',
+          color: '--warning-color',
+          label: 'Armed Vacation',
+          isAnimated: false,
+        };
+
+      case 'armed_custom_bypass':
+        return {
+          state: 'armed_custom_bypass',
+          icon: 'mdi:shield-check',
+          color: '--warning-color',
+          label: 'Armed Custom',
+          isAnimated: false,
+        };
+
+      case 'arming':
+        return {
+          state: 'arming',
+          icon: 'mdi:shield-sync',
+          color: '--info-color',
+          label: 'Arming',
+          isAnimated: true,
+        };
+
+      case 'disarming':
+        return {
+          state: 'disarming',
+          icon: 'mdi:shield-sync',
+          color: '--info-color',
+          label: 'Disarming',
+          isAnimated: true,
+        };
+
       case 'pending':
         return {
           state: 'pending',
           icon: 'mdi:clock-outline',
-          color: '--info-color',
+          color: '--warning-color',
           label: 'Pending',
           isAnimated: true,
         };
@@ -83,6 +128,15 @@ export class AlarmStateManager {
         return 'mdi:home-lock';
       case 'armed_away':
         return 'mdi:shield-lock';
+      case 'armed_night':
+        return 'mdi:weather-night';
+      case 'armed_vacation':
+        return 'mdi:airplane';
+      case 'armed_custom_bypass':
+        return 'mdi:shield-check';
+      case 'arming':
+      case 'disarming':
+        return 'mdi:shield-sync';
       case 'pending':
         return 'mdi:clock-outline';
       case 'triggered':
@@ -103,11 +157,16 @@ export class AlarmStateManager {
       case 'disarmed':
         return '--success-color';
       case 'armed_home':
+      case 'armed_vacation':
+      case 'armed_custom_bypass':
+      case 'pending':
         return '--warning-color';
       case 'armed_away':
       case 'triggered':
         return '--error-color';
-      case 'pending':
+      case 'armed_night':
+      case 'arming':
+      case 'disarming':
         return '--info-color';
       case 'unknown':
       default:
@@ -128,6 +187,16 @@ export class AlarmStateManager {
         return 'Armed Home';
       case 'armed_away':
         return 'Armed Away';
+      case 'armed_night':
+        return 'Armed Night';
+      case 'armed_vacation':
+        return 'Armed Vacation';
+      case 'armed_custom_bypass':
+        return 'Armed Custom';
+      case 'arming':
+        return 'Arming';
+      case 'disarming':
+        return 'Disarming';
       case 'pending':
         return 'Pending';
       case 'triggered':

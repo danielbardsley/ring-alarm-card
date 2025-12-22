@@ -165,7 +165,7 @@ describe('Ring Alarm Card End-to-End Integration Tests', () => {
       // Verify pending state with animation
       expect((element as any).alarmState.state).toBe('pending');
       expect((element as any).alarmState.label).toBe('Pending');
-      expect((element as any).alarmState.color).toBe('--info-color');
+      expect((element as any).alarmState.color).toBe('--warning-color');
       expect((element as any).alarmState.icon).toBe('mdi:clock-outline');
       expect((element as any).alarmState.isAnimated).toBe(true);
 

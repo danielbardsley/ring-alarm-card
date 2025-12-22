@@ -83,7 +83,7 @@ describe('Property-Based Tests for AlarmStateManager', () => {
                 break;
               case 'pending':
                 expect(result.icon).toBe('mdi:clock-outline');
-                expect(result.color).toBe('--info-color');
+                expect(result.color).toBe('--warning-color');
                 expect(result.label).toBe('Pending');
                 expect(result.isAnimated).toBe(true);
                 break;

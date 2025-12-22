@@ -56,6 +56,11 @@ export interface AlarmState {
     | 'disarmed'
     | 'armed_home'
     | 'armed_away'
+    | 'armed_night'
+    | 'armed_vacation'
+    | 'armed_custom_bypass'
+    | 'arming'
+    | 'disarming'
     | 'pending'
     | 'triggered'
     | 'unknown';
