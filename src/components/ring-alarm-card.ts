@@ -169,8 +169,22 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       return;
     }
 
+    // Check if we're switching targets during an active transition
+    const isSwitchingTarget =
+      this.transitionState.isTransitioning &&
+      this.transitionState.targetAction !== action &&
+      (action === 'arm_home' || action === 'arm_away');
+
     // Track the last clicked action for transition target detection
     this._lastClickedAction = action;
+
+    // If switching targets during transition, reset the transition state immediately
+    // This ensures the progress bar resets when switching between Home/Away
+    if (isSwitchingTarget) {
+      this._stopProgressInterpolation();
+      this._transitionTotalDuration = 0; // Will be recaptured on next entity update
+      this.transitionState = TransitionStateManager.createEmptyState();
+    }
 
     // Set loading state
     this._updateButtonState(action, { isLoading: true, hasError: false });
@@ -385,8 +399,13 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       if (isNewTransition || targetChanged) {
         // Cancel any previous transition and start fresh
         this._stopProgressInterpolation();
+        
+        // Always capture the new duration when starting a transition or changing target
+        // This ensures progress resets properly when switching between Home/Away
         this._transitionTotalDuration =
           TransitionStateManager.captureInitialDuration(exitSecondsLeft);
+        
+        // Reset progress to 0 for the new transition
         this.transitionState = TransitionStateManager.createTransitionState(
           targetAction,
           exitSecondsLeft
