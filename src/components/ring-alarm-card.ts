@@ -295,7 +295,8 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       );
 
       // Check if this is a new transition or a change in target
-      const isNewTransition = !wasTransitional || previousState !== currentState;
+      const isNewTransition =
+        !wasTransitional || previousState !== currentState;
       const targetChanged =
         this.transitionState.isTransitioning &&
         this.transitionState.targetAction !== targetAction;

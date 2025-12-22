@@ -315,7 +315,8 @@ compact_mode: false</pre
             computedState.transitionProgress = buttonState.transitionProgress;
           }
           if (buttonState.transitionRemainingSeconds !== undefined) {
-            computedState.transitionRemainingSeconds = buttonState.transitionRemainingSeconds;
+            computedState.transitionRemainingSeconds =
+              buttonState.transitionRemainingSeconds;
           }
 
           return AlarmDisplayRenderer.renderControlButton(
@@ -336,12 +337,7 @@ compact_mode: false</pre
    */
   static renderLiveRegion(announcement?: string): TemplateResult {
     return html`
-      <div
-        class="sr-only"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
+      <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
         ${announcement || ''}
       </div>
     `;
@@ -479,10 +475,17 @@ compact_mode: false</pre
     const baseLabel = baseAriaLabels[action.type];
 
     // If transitioning, include countdown status
-    if (state.isTransitionTarget && state.transitionRemainingSeconds !== undefined) {
+    if (
+      state.isTransitionTarget &&
+      state.transitionRemainingSeconds !== undefined
+    ) {
       const seconds = Math.ceil(state.transitionRemainingSeconds);
-      const actionLabel = action.type === 'disarm' ? 'Disarming' :
-                          action.type === 'arm_home' ? 'Arming home' : 'Arming away';
+      const actionLabel =
+        action.type === 'disarm'
+          ? 'Disarming'
+          : action.type === 'arm_home'
+            ? 'Arming home'
+            : 'Arming away';
       return `${actionLabel} - ${seconds} second${seconds !== 1 ? 's' : ''} remaining`;
     }
 

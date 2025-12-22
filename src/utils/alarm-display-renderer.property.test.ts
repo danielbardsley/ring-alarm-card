@@ -393,7 +393,6 @@ describe('AlarmDisplayRenderer Property Tests', () => {
   });
 });
 
-
 /**
  * Property-based tests for Alarm State Transitions feature
  * Feature: alarm-state-transitions
@@ -622,7 +621,11 @@ describe('Alarm State Transitions Property Tests', () => {
       // For any transitional state, exactly one button should be the target
       fc.assert(
         fc.property(
-          fc.constantFrom('arming' as const, 'pending' as const, 'disarming' as const),
+          fc.constantFrom(
+            'arming' as const,
+            'pending' as const,
+            'disarming' as const
+          ),
           fc.constantFrom('armed_home', 'armed_away'),
           (alarmState, targetState) => {
             const attributes =
@@ -837,16 +840,20 @@ describe('Alarm State Transitions Property Tests', () => {
 
     it('should generate announcement for transitional states', () => {
       fc.assert(
-        fc.property(transitionalStateArb, actionTypeArb, (alarmState, targetAction) => {
-          const announcement =
-            AlarmDisplayRenderer.generateTransitionAnnouncement(
-              alarmState,
-              targetAction
-            );
+        fc.property(
+          transitionalStateArb,
+          actionTypeArb,
+          (alarmState, targetAction) => {
+            const announcement =
+              AlarmDisplayRenderer.generateTransitionAnnouncement(
+                alarmState,
+                targetAction
+              );
 
-          // Verify announcement is not empty for transitional states
-          expect(announcement.length).toBeGreaterThan(0);
-        }),
+            // Verify announcement is not empty for transitional states
+            expect(announcement.length).toBeGreaterThan(0);
+          }
+        ),
         { numRuns: 100 }
       );
     });
@@ -894,8 +901,10 @@ describe('Alarm State Transitions Property Tests', () => {
     });
 
     it('should generate appropriate announcement for disarming state', () => {
-      const announcement =
-        AlarmDisplayRenderer.generateTransitionAnnouncement('disarming', 'disarm');
+      const announcement = AlarmDisplayRenderer.generateTransitionAnnouncement(
+        'disarming',
+        'disarm'
+      );
 
       expect(announcement.toLowerCase()).toContain('disarming');
     });
@@ -920,8 +929,7 @@ describe('Alarm State Transitions Property Tests', () => {
         fc.property(
           fc.string({ minLength: 1, maxLength: 100 }),
           announcement => {
-            const result =
-              AlarmDisplayRenderer.renderLiveRegion(announcement);
+            const result = AlarmDisplayRenderer.renderLiveRegion(announcement);
             const htmlString = result.getHTML?.() || result.toString();
 
             // Verify live region structure

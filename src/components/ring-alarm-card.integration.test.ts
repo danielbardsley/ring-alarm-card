@@ -598,7 +598,6 @@ describe('RingAlarmCard Integration Tests', () => {
   });
 });
 
-
 describe('Transition State Integration', () => {
   let element: RingAlarmCard;
   let mockHass: HomeAssistant;
@@ -1042,9 +1041,15 @@ describe('Transition State Integration', () => {
 
       // Rapid sequence: disarmed -> arming -> disarmed -> arming -> armed
       const states = [
-        { state: 'arming', attributes: { next_state: 'armed_away', exit_seconds_left: 30 } },
+        {
+          state: 'arming',
+          attributes: { next_state: 'armed_away', exit_seconds_left: 30 },
+        },
         { state: 'disarmed', attributes: {} },
-        { state: 'arming', attributes: { next_state: 'armed_home', exit_seconds_left: 15 } },
+        {
+          state: 'arming',
+          attributes: { next_state: 'armed_home', exit_seconds_left: 15 },
+        },
         { state: 'armed_home', attributes: {} },
       ];
 
@@ -1099,7 +1104,9 @@ describe('Transition State Integration', () => {
       await element.updateComplete;
 
       // Get button states with transition
-      const buttonStatesWithTransition = (element as any)._getButtonStatesWithTransition();
+      const buttonStatesWithTransition = (
+        element as any
+      )._getButtonStatesWithTransition();
 
       // arm_away should be the transition target
       const armAwayState = buttonStatesWithTransition.get('arm_away');

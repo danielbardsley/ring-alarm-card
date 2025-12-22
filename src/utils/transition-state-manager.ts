@@ -110,8 +110,7 @@ export class TransitionStateManager {
       return 0;
     }
 
-    const progress =
-      ((totalDuration - exitSecondsLeft) / totalDuration) * 100;
+    const progress = ((totalDuration - exitSecondsLeft) / totalDuration) * 100;
 
     // Clamp to [0, 100] range
     return Math.max(0, Math.min(100, progress));

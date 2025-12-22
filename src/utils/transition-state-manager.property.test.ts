@@ -42,7 +42,7 @@ describe('Property-Based Tests for TransitionStateManager', () => {
       // Feature: alarm-state-transitions, Property 1: Transitional State Detection
       // Validates: Requirements 2.1, 2.5
       fc.assert(
-        fc.property(fc.constantFrom(...transitionalStates), (state) => {
+        fc.property(fc.constantFrom(...transitionalStates), state => {
           const result = TransitionStateManager.isTransitionalState(state);
           expect(result).toBe(true);
         }),
@@ -54,7 +54,7 @@ describe('Property-Based Tests for TransitionStateManager', () => {
       // Feature: alarm-state-transitions, Property 1: Transitional State Detection
       // Validates: Requirements 2.1, 2.5
       fc.assert(
-        fc.property(fc.constantFrom(...nonTransitionalStates), (state) => {
+        fc.property(fc.constantFrom(...nonTransitionalStates), state => {
           const result = TransitionStateManager.isTransitionalState(state);
           expect(result).toBe(false);
         }),
@@ -71,7 +71,7 @@ describe('Property-Based Tests for TransitionStateManager', () => {
       ];
 
       fc.assert(
-        fc.property(fc.constantFrom(...allStates), (state) => {
+        fc.property(fc.constantFrom(...allStates), state => {
           const isTransitional =
             TransitionStateManager.isTransitionalState(state);
           const expectedTransitional = transitionalStates.includes(state);
@@ -129,7 +129,7 @@ describe('Property-Based Tests for TransitionStateManager', () => {
       // Feature: alarm-state-transitions, Property 3: Progress Calculation Accuracy
       // Validates: Requirements 3.1, 3.2, 3.3
       fc.assert(
-        fc.property(fc.integer({ min: 1, max: 300 }), (duration) => {
+        fc.property(fc.integer({ min: 1, max: 300 }), duration => {
           const progress = TransitionStateManager.calculateProgress(
             duration,
             duration
@@ -144,7 +144,7 @@ describe('Property-Based Tests for TransitionStateManager', () => {
       // Feature: alarm-state-transitions, Property 3: Progress Calculation Accuracy
       // Validates: Requirements 3.1, 3.2, 3.3
       fc.assert(
-        fc.property(fc.integer({ min: 1, max: 300 }), (totalDuration) => {
+        fc.property(fc.integer({ min: 1, max: 300 }), totalDuration => {
           const progress = TransitionStateManager.calculateProgress(
             0,
             totalDuration
