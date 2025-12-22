@@ -82,3 +82,6 @@ export type {
   ControlAction,
   ControlButtonState,
 } from '@/utils/alarm-control-manager';
+
+// Re-export transition types from TransitionStateManager
+export type { TransitionState } from '@/utils/transition-state-manager';

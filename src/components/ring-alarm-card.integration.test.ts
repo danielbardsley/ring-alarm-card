@@ -597,3 +597,522 @@ describe('RingAlarmCard Integration Tests', () => {
     });
   });
 });
+
+
+describe('Transition State Integration', () => {
+  let element: RingAlarmCard;
+  let mockHass: HomeAssistant;
+
+  beforeEach(() => {
+    element = document.createElement('ring-alarm-card') as RingAlarmCard;
+    document.body.appendChild(element);
+
+    mockHass = {
+      states: {},
+      callService: jest.fn().mockResolvedValue({}),
+      language: 'en',
+      themes: {},
+      selectedTheme: null,
+      panels: {},
+      panelUrl: '',
+    };
+  });
+
+  afterEach(() => {
+    if (element.parentNode) {
+      element.parentNode.removeChild(element);
+    }
+  });
+
+  describe('Transition state tracking on state change', () => {
+    it('should initialize transition state when entering arming state', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      // Start with disarmed state
+      const disarmedEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'disarmed',
+        attributes: {},
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = disarmedEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      // Verify no transition initially
+      expect((element as any).transitionState.isTransitioning).toBe(false);
+
+      // Change to arming state with exitSecondsLeft
+      const armingEntity: HassEntity = {
+        ...disarmedEntity,
+        state: 'arming',
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 30,
+        },
+        last_updated: '2023-01-01T00:01:00Z',
+      };
+      const armingHass = {
+        ...mockHass,
+        states: {
+          'alarm_control_panel.ring_alarm': armingEntity,
+        },
+      };
+
+      element.hass = armingHass;
+      (element as any)._handleEntityStateChange();
+      await element.updateComplete;
+
+      // Verify transition state is set
+      expect((element as any).transitionState.isTransitioning).toBe(true);
+      expect((element as any).transitionState.targetAction).toBe('arm_away');
+      expect((element as any).transitionState.totalDuration).toBe(30);
+      expect((element as any).transitionState.remainingSeconds).toBe(30);
+      expect((element as any).transitionState.progress).toBe(0);
+    });
+
+    it('should track transition for arm_home target', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      const disarmedEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'disarmed',
+        attributes: {},
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = disarmedEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      // Change to arming state with arm_home target
+      const armingEntity: HassEntity = {
+        ...disarmedEntity,
+        state: 'arming',
+        attributes: {
+          next_state: 'armed_home',
+          exit_seconds_left: 15,
+        },
+        last_updated: '2023-01-01T00:01:00Z',
+      };
+      const armingHass = {
+        ...mockHass,
+        states: {
+          'alarm_control_panel.ring_alarm': armingEntity,
+        },
+      };
+
+      element.hass = armingHass;
+      (element as any)._handleEntityStateChange();
+      await element.updateComplete;
+
+      expect((element as any).transitionState.isTransitioning).toBe(true);
+      expect((element as any).transitionState.targetAction).toBe('arm_home');
+      expect((element as any).transitionState.totalDuration).toBe(15);
+    });
+  });
+
+  describe('Progress updates as exitSecondsLeft decreases', () => {
+    it('should update progress when exitSecondsLeft decreases', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      // Start with arming state
+      const armingEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'arming',
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 30,
+        },
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = armingEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      // Verify initial state
+      expect((element as any).transitionState.progress).toBe(0);
+      expect((element as any).transitionState.remainingSeconds).toBe(30);
+
+      // Update with decreased exitSecondsLeft (15 seconds elapsed)
+      const updatedEntity: HassEntity = {
+        ...armingEntity,
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 15,
+        },
+        last_updated: '2023-01-01T00:00:15Z',
+      };
+      const updatedHass = {
+        ...mockHass,
+        states: {
+          'alarm_control_panel.ring_alarm': updatedEntity,
+        },
+      };
+
+      element.hass = updatedHass;
+      (element as any)._handleEntityStateChange();
+      await element.updateComplete;
+
+      // Verify progress updated (50% complete)
+      expect((element as any).transitionState.progress).toBe(50);
+      expect((element as any).transitionState.remainingSeconds).toBe(15);
+      expect((element as any).transitionState.totalDuration).toBe(30); // Should remain unchanged
+
+      // Update to near completion (3 seconds left)
+      const nearCompleteEntity: HassEntity = {
+        ...armingEntity,
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 3,
+        },
+        last_updated: '2023-01-01T00:00:27Z',
+      };
+      const nearCompleteHass = {
+        ...mockHass,
+        states: {
+          'alarm_control_panel.ring_alarm': nearCompleteEntity,
+        },
+      };
+
+      element.hass = nearCompleteHass;
+      (element as any)._handleEntityStateChange();
+      await element.updateComplete;
+
+      // Verify progress is 90%
+      expect((element as any).transitionState.progress).toBe(90);
+      expect((element as any).transitionState.remainingSeconds).toBe(3);
+    });
+  });
+
+  describe('Transition cleanup on state exit', () => {
+    it('should clear transition state when alarm becomes armed', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      // Start with arming state
+      const armingEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'arming',
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 10,
+        },
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = armingEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      // Verify transition is active
+      expect((element as any).transitionState.isTransitioning).toBe(true);
+
+      // Change to armed_away state
+      const armedEntity: HassEntity = {
+        ...armingEntity,
+        state: 'armed_away',
+        attributes: {},
+        last_updated: '2023-01-01T00:00:10Z',
+      };
+      const armedHass = {
+        ...mockHass,
+        states: {
+          'alarm_control_panel.ring_alarm': armedEntity,
+        },
+      };
+
+      element.hass = armedHass;
+      (element as any)._handleEntityStateChange();
+      await element.updateComplete;
+
+      // Verify transition is cleared
+      expect((element as any).transitionState.isTransitioning).toBe(false);
+      expect((element as any).transitionState.targetAction).toBeNull();
+      expect((element as any).transitionState.progress).toBe(0);
+    });
+
+    it('should clear transition state when entity becomes unavailable', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      // Start with arming state
+      const armingEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'arming',
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 20,
+        },
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = armingEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      expect((element as any).transitionState.isTransitioning).toBe(true);
+
+      // Make entity unavailable
+      const unavailableEntity: HassEntity = {
+        ...armingEntity,
+        state: 'unavailable',
+        last_updated: '2023-01-01T00:00:05Z',
+      };
+      const unavailableHass = {
+        ...mockHass,
+        states: {
+          'alarm_control_panel.ring_alarm': unavailableEntity,
+        },
+      };
+
+      element.hass = unavailableHass;
+      (element as any)._handleEntityStateChange();
+      await element.updateComplete;
+
+      // Verify transition is cleared
+      expect((element as any).transitionState.isTransitioning).toBe(false);
+      expect((element as any).entityError).toContain('unavailable');
+    });
+  });
+
+  describe('Rapid state change handling', () => {
+    it('should cancel previous transition when new state change occurs', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      // Start with arming to away
+      const armingAwayEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'arming',
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 30,
+        },
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = armingAwayEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      // Verify initial transition
+      expect((element as any).transitionState.isTransitioning).toBe(true);
+      expect((element as any).transitionState.targetAction).toBe('arm_away');
+      expect((element as any).transitionState.totalDuration).toBe(30);
+
+      // Rapidly change to disarmed (user cancelled)
+      const disarmedEntity: HassEntity = {
+        ...armingAwayEntity,
+        state: 'disarmed',
+        attributes: {},
+        last_updated: '2023-01-01T00:00:02Z',
+      };
+      const disarmedHass = {
+        ...mockHass,
+        states: {
+          'alarm_control_panel.ring_alarm': disarmedEntity,
+        },
+      };
+
+      element.hass = disarmedHass;
+      (element as any)._handleEntityStateChange();
+      await element.updateComplete;
+
+      // Verify transition is cancelled
+      expect((element as any).transitionState.isTransitioning).toBe(false);
+      expect((element as any).alarmState.state).toBe('disarmed');
+    });
+
+    it('should handle rapid transition target changes', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      // Start with arming to away
+      const armingAwayEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'arming',
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 30,
+        },
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = armingAwayEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      expect((element as any).transitionState.targetAction).toBe('arm_away');
+
+      // Change target to arm_home (user changed their mind)
+      const armingHomeEntity: HassEntity = {
+        ...armingAwayEntity,
+        attributes: {
+          next_state: 'armed_home',
+          exit_seconds_left: 15, // New countdown
+        },
+        last_updated: '2023-01-01T00:00:02Z',
+      };
+      const armingHomeHass = {
+        ...mockHass,
+        states: {
+          'alarm_control_panel.ring_alarm': armingHomeEntity,
+        },
+      };
+
+      element.hass = armingHomeHass;
+      (element as any)._handleEntityStateChange();
+      await element.updateComplete;
+
+      // Verify new transition with new target and duration
+      expect((element as any).transitionState.isTransitioning).toBe(true);
+      expect((element as any).transitionState.targetAction).toBe('arm_home');
+      expect((element as any).transitionState.totalDuration).toBe(15);
+      expect((element as any).transitionState.progress).toBe(0); // Reset to 0
+    });
+
+    it('should handle multiple rapid state changes', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      const baseEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'disarmed',
+        attributes: {},
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = baseEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      // Rapid sequence: disarmed -> arming -> disarmed -> arming -> armed
+      const states = [
+        { state: 'arming', attributes: { next_state: 'armed_away', exit_seconds_left: 30 } },
+        { state: 'disarmed', attributes: {} },
+        { state: 'arming', attributes: { next_state: 'armed_home', exit_seconds_left: 15 } },
+        { state: 'armed_home', attributes: {} },
+      ];
+
+      for (let i = 0; i < states.length; i++) {
+        const entity: HassEntity = {
+          ...baseEntity,
+          state: states[i].state,
+          attributes: states[i].attributes,
+          last_updated: `2023-01-01T00:00:0${i + 1}Z`,
+        };
+        const hass = {
+          ...mockHass,
+          states: {
+            'alarm_control_panel.ring_alarm': entity,
+          },
+        };
+
+        element.hass = hass;
+        (element as any)._handleEntityStateChange();
+        await element.updateComplete;
+      }
+
+      // Final state should be armed_home with no transition
+      expect((element as any).alarmState.state).toBe('armed_home');
+      expect((element as any).transitionState.isTransitioning).toBe(false);
+    });
+  });
+
+  describe('Button states with transition properties', () => {
+    it('should pass transition properties to button states', async () => {
+      const config: RingAlarmCardConfig = {
+        type: 'custom:ring-alarm-card',
+        entity: 'alarm_control_panel.ring_alarm',
+      };
+
+      const armingEntity: HassEntity = {
+        entity_id: 'alarm_control_panel.ring_alarm',
+        state: 'arming',
+        attributes: {
+          next_state: 'armed_away',
+          exit_seconds_left: 20,
+        },
+        context: { id: 'test-context' },
+        last_changed: '2023-01-01T00:00:00Z',
+        last_updated: '2023-01-01T00:00:00Z',
+      };
+      mockHass.states['alarm_control_panel.ring_alarm'] = armingEntity;
+
+      element.setConfig(config);
+      element.hass = mockHass;
+      (element as any)._validateAndInitializeEntity();
+      await element.updateComplete;
+
+      // Get button states with transition
+      const buttonStatesWithTransition = (element as any)._getButtonStatesWithTransition();
+
+      // arm_away should be the transition target
+      const armAwayState = buttonStatesWithTransition.get('arm_away');
+      expect(armAwayState.isTransitionTarget).toBe(true);
+      expect(armAwayState.transitionProgress).toBe(0);
+      expect(armAwayState.transitionRemainingSeconds).toBe(20);
+
+      // Other buttons should not be transition targets
+      const disarmState = buttonStatesWithTransition.get('disarm');
+      expect(disarmState.isTransitionTarget).toBe(false);
+
+      const armHomeState = buttonStatesWithTransition.get('arm_home');
+      expect(armHomeState.isTransitionTarget).toBe(false);
+    });
+  });
+});

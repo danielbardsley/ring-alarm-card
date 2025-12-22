@@ -76,12 +76,43 @@
             font-size: 0.85em;
             color: #666;
         }
-        .state-controls select {
+        .state-controls select,
+        .state-controls input[type="range"] {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 0.9em;
+        }
+        .state-controls input[type="range"] {
+            padding: 0;
+            margin: 8px 0;
+        }
+        .state-controls button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 4px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .state-controls button:hover {
+            background: #0288d1;
+        }
+        .state-controls button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .state-controls .countdown-display {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
         }
         .feature-list {
             margin: 0;
@@ -158,6 +189,47 @@
             </div>
         </div>
 
+        <!-- State Transitions with Progress Indicator Demo -->
+        <div class="demo-section">
+            <h2>🔄 State Transitions with Progress Indicator</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                During alarm countdown periods, a progress indicator fills along the target button's border.
+                Use the controls below to simulate the countdown and see the progress animation.
+            </p>
+            <div class="demo-grid">
+                <div class="card-demo">
+                    <h3>Arming to Away (with countdown)</h3>
+                    <ring-alarm-card id="card-transition-away"></ring-alarm-card>
+                    <div class="state-controls">
+                        <label for="countdown-away">Countdown Progress:</label>
+                        <input type="range" id="countdown-away" min="0" max="30" value="30">
+                        <div class="countdown-display" id="countdown-away-display">30 seconds</div>
+                        <button id="start-countdown-away">Start Countdown Simulation</button>
+                    </div>
+                </div>
+                <div class="card-demo">
+                    <h3>Arming to Home (with countdown)</h3>
+                    <ring-alarm-card id="card-transition-home"></ring-alarm-card>
+                    <div class="state-controls">
+                        <label for="countdown-home">Countdown Progress:</label>
+                        <input type="range" id="countdown-home" min="0" max="30" value="30">
+                        <div class="countdown-display" id="countdown-home-display">30 seconds</div>
+                        <button id="start-countdown-home">Start Countdown Simulation</button>
+                    </div>
+                </div>
+                <div class="card-demo">
+                    <h3>Pending (Entry Delay)</h3>
+                    <ring-alarm-card id="card-transition-pending"></ring-alarm-card>
+                    <div class="state-controls">
+                        <label for="countdown-pending">Entry Delay Progress:</label>
+                        <input type="range" id="countdown-pending" min="0" max="30" value="30">
+                        <div class="countdown-display" id="countdown-pending-display">30 seconds</div>
+                        <button id="start-countdown-pending">Start Entry Delay Simulation</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Interactive Demo -->
         <div class="demo-section">
             <h2>🔄 Interactive Demo</h2>
@@ -195,19 +267,22 @@
                 <li><strong>Three Action Buttons:</strong> Disarmed, Home, and Away for quick state changes</li>
                 <li><strong>Visual State Indication:</strong> Active button is highlighted with appropriate color</li>
                 <li><strong>Transitional State Handling:</strong> Buttons disabled during arming/disarming/pending/triggered states</li>
+                <li><strong>Progress Indicator:</strong> Circular border progress fills during countdown periods</li>
+                <li><strong>Countdown Timing:</strong> Progress syncs with exitSecondsLeft attribute from alarm entity</li>
                 <li><strong>Loading States:</strong> Visual feedback when a service call is in progress</li>
                 <li><strong>Error Handling:</strong> Error indication with automatic recovery after 3 seconds</li>
-                <li><strong>Accessibility:</strong> Full ARIA support with labels, pressed, and disabled attributes</li>
+                <li><strong>Accessibility:</strong> Full ARIA support with labels, pressed, disabled attributes, and live region announcements</li>
+                <li><strong>Reduced Motion:</strong> Respects prefers-reduced-motion setting for animations</li>
                 <li><strong>Theme Integration:</strong> Uses Home Assistant CSS custom properties for consistent styling</li>
                 <li><strong>Compact Mode:</strong> Smaller button size for space-constrained dashboards</li>
             </ul>
         </div>
     </div>
 
-    <script type="module" src="../src/ring-alarm-card.ts"></script>
+    <script type="module" src="../ring-alarm-card.js"></script>
     <script>
         // Mock HASS object for demo purposes
-        function createMockHass(entityState) {
+        function createMockHass(entityState, attributes = {}) {
             return {
                 states: {
                     'alarm_control_panel.ring_alarm': {
@@ -216,7 +291,8 @@
                         attributes: {
                             friendly_name: 'Ring Alarm',
                             code_format: 'number',
-                            supported_features: 31
+                            supported_features: 31,
+                            ...attributes
                         },
                         context: { id: 'demo' },
                         last_changed: new Date().toISOString(),
@@ -235,6 +311,69 @@
                 panels: {},
                 panelUrl: ''
             };
+        }
+
+        // Countdown simulation state
+        const countdownIntervals = {};
+
+        // Start countdown simulation for a card
+        function startCountdown(cardId, sliderId, displayId, buttonId, targetState, nextState, totalSeconds = 30) {
+            const card = document.getElementById(cardId);
+            const slider = document.getElementById(sliderId);
+            const display = document.getElementById(displayId);
+            const button = document.getElementById(buttonId);
+            
+            if (!card || !slider || !display || !button) return;
+
+            // Clear any existing countdown
+            if (countdownIntervals[cardId]) {
+                clearInterval(countdownIntervals[cardId]);
+            }
+
+            // Disable button during countdown
+            button.disabled = true;
+            button.textContent = 'Countdown in progress...';
+
+            let secondsLeft = totalSeconds;
+            slider.value = secondsLeft;
+            display.textContent = `${secondsLeft} seconds`;
+
+            // Update card with initial state
+            card.hass = createMockHass(targetState, {
+                exit_seconds_left: secondsLeft,
+                next_state: nextState,
+                previous_state: nextState === 'armed_away' ? 'armed_away' : 'armed_home'
+            });
+
+            // Start countdown interval
+            countdownIntervals[cardId] = setInterval(() => {
+                secondsLeft--;
+                slider.value = secondsLeft;
+                display.textContent = `${secondsLeft} seconds`;
+
+                // Update card with new countdown value
+                card.hass = createMockHass(targetState, {
+                    exit_seconds_left: secondsLeft,
+                    next_state: nextState,
+                    previous_state: nextState === 'armed_away' ? 'armed_away' : 'armed_home'
+                });
+
+                if (secondsLeft <= 0) {
+                    clearInterval(countdownIntervals[cardId]);
+                    countdownIntervals[cardId] = null;
+                    
+                    // Transition to final state
+                    card.hass = createMockHass(nextState);
+                    
+                    // Re-enable button
+                    button.disabled = false;
+                    button.textContent = targetState === 'pending' ? 'Start Entry Delay Simulation' : 'Start Countdown Simulation';
+                    
+                    // Reset slider
+                    slider.value = totalSeconds;
+                    display.textContent = `${totalSeconds} seconds`;
+                }
+            }, 1000);
         }
 
         // Configure cards when DOM is ready
@@ -275,6 +414,34 @@
                 compactCard.hass = createMockHass('disarmed');
             }
 
+            // Configure transition demo cards
+            const transitionAwayCard = document.getElementById('card-transition-away');
+            if (transitionAwayCard) {
+                transitionAwayCard.setConfig({ ...baseConfig, title: 'Arming Away' });
+                transitionAwayCard.hass = createMockHass('arming', {
+                    exit_seconds_left: 30,
+                    next_state: 'armed_away'
+                });
+            }
+
+            const transitionHomeCard = document.getElementById('card-transition-home');
+            if (transitionHomeCard) {
+                transitionHomeCard.setConfig({ ...baseConfig, title: 'Arming Home' });
+                transitionHomeCard.hass = createMockHass('arming', {
+                    exit_seconds_left: 30,
+                    next_state: 'armed_home'
+                });
+            }
+
+            const transitionPendingCard = document.getElementById('card-transition-pending');
+            if (transitionPendingCard) {
+                transitionPendingCard.setConfig({ ...baseConfig, title: 'Entry Delay' });
+                transitionPendingCard.hass = createMockHass('pending', {
+                    exit_seconds_left: 30,
+                    previous_state: 'armed_away'
+                });
+            }
+
             // Interactive state selector
             const stateSelector = document.getElementById('state-selector');
             const interactiveCard = document.getElementById('card-interactive');
@@ -284,6 +451,44 @@
                     interactiveCard.hass = createMockHass(e.target.value);
                 });
             }
+
+            // Manual slider controls for transition cards
+            const sliderConfigs = [
+                { slider: 'countdown-away', card: 'card-transition-away', display: 'countdown-away-display', state: 'arming', nextState: 'armed_away' },
+                { slider: 'countdown-home', card: 'card-transition-home', display: 'countdown-home-display', state: 'arming', nextState: 'armed_home' },
+                { slider: 'countdown-pending', card: 'card-transition-pending', display: 'countdown-pending-display', state: 'pending', nextState: 'armed_away' }
+            ];
+
+            sliderConfigs.forEach(({ slider, card, display, state, nextState }) => {
+                const sliderEl = document.getElementById(slider);
+                const cardEl = document.getElementById(card);
+                const displayEl = document.getElementById(display);
+
+                if (sliderEl && cardEl && displayEl) {
+                    sliderEl.addEventListener('input', (e) => {
+                        const secondsLeft = parseInt(e.target.value, 10);
+                        displayEl.textContent = `${secondsLeft} seconds`;
+                        cardEl.hass = createMockHass(state, {
+                            exit_seconds_left: secondsLeft,
+                            next_state: nextState,
+                            previous_state: nextState
+                        });
+                    });
+                }
+            });
+
+            // Countdown simulation buttons
+            document.getElementById('start-countdown-away')?.addEventListener('click', () => {
+                startCountdown('card-transition-away', 'countdown-away', 'countdown-away-display', 'start-countdown-away', 'arming', 'armed_away', 30);
+            });
+
+            document.getElementById('start-countdown-home')?.addEventListener('click', () => {
+                startCountdown('card-transition-home', 'countdown-home', 'countdown-home-display', 'start-countdown-home', 'arming', 'armed_home', 30);
+            });
+
+            document.getElementById('start-countdown-pending')?.addEventListener('click', () => {
+                startCountdown('card-transition-pending', 'countdown-pending', 'countdown-pending-display', 'start-countdown-pending', 'pending', 'disarmed', 30);
+            });
         });
     </script>
 </body>

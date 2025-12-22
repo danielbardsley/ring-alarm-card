@@ -4,7 +4,14 @@
  * Requirements: 3.4, 3.5, 4.1, 4.4
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { RingAlarmCard } from './ring-alarm-card';
 import { HomeAssistant, RingAlarmCardConfig, HassEntity } from '../types';
 
@@ -127,13 +134,13 @@ describe('RingAlarmCard Button Click Handling', () => {
     it('should not call service when entity is not configured', async () => {
       // Create element without appending to DOM to avoid connectedCallback
       const testElement = new RingAlarmCard();
-      
+
       // Set HASS but don't set config (simulating missing entity)
       testElement.hass = mockHass;
-      
+
       // Manually initialize button states since connectedCallback won't run
       (testElement as any)._initializeButtonStates();
-      
+
       // Trigger the button click handler - should return early due to missing config
       await (testElement as any)._handleControlButtonClick('disarm');
 
@@ -147,7 +154,7 @@ describe('RingAlarmCard Button Click Handling', () => {
 
       // Create a promise that we can control
       let resolveService: () => void;
-      const servicePromise = new Promise<void>((resolve) => {
+      const servicePromise = new Promise<void>(resolve => {
         resolveService = resolve;
       });
       mockCallService.mockReturnValue(servicePromise);
@@ -318,7 +325,7 @@ describe('RingAlarmCard Button Click Handling', () => {
 
       // Create a promise that we can control
       let resolveService: () => void;
-      const servicePromise = new Promise<void>((resolve) => {
+      const servicePromise = new Promise<void>(resolve => {
         resolveService = resolve;
       });
       mockCallService.mockReturnValue(servicePromise);
@@ -328,8 +335,12 @@ describe('RingAlarmCard Button Click Handling', () => {
 
       // Check only disarm button is loading
       expect((element as any).buttonStates.get('disarm').isLoading).toBe(true);
-      expect((element as any).buttonStates.get('arm_home').isLoading).toBe(false);
-      expect((element as any).buttonStates.get('arm_away').isLoading).toBe(false);
+      expect((element as any).buttonStates.get('arm_home').isLoading).toBe(
+        false
+      );
+      expect((element as any).buttonStates.get('arm_away').isLoading).toBe(
+        false
+      );
 
       // Resolve the service call
       resolveService!();

@@ -15,12 +15,14 @@ import type {
   RingAlarmCardConfig,
   AlarmState,
   ControlButtonState,
+  TransitionState,
 } from '../types';
 import type { ControlActionType } from '../utils/alarm-control-manager';
 import { ConfigurationManager } from '../config/configuration-manager';
 import { AlarmStateManager } from '../utils/alarm-state-manager';
 import { AlarmDisplayRenderer } from '../utils/alarm-display-renderer';
 import { AlarmControlManager } from '../utils/alarm-control-manager';
+import { TransitionStateManager } from '../utils/transition-state-manager';
 import { cardStyles } from '../styles/card-styles';
 import { getHassStatus, hasEntityStateChanged } from '../utils/hass-utils';
 
@@ -32,6 +34,14 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
   @state() private entityError: string | undefined;
   @state() private buttonStates: Map<ControlActionType, ControlButtonState> =
     new Map();
+  @state() private transitionState: TransitionState =
+    TransitionStateManager.createEmptyState();
+
+  /**
+   * Track the total duration when a transition starts
+   * This is captured from the initial exitSecondsLeft value
+   */
+  private _transitionTotalDuration: number = 0;
 
   /**
    * Lit component styles using CSS-in-JS
@@ -222,24 +232,108 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
     if (!entity) {
       this.entityError = `entity_not_found:${this.config.entity}`;
       this.alarmState = undefined;
+      this._clearTransitionState();
       return;
     }
 
     if (entity.state === 'unavailable') {
       this.entityError = `entity_unavailable:${this.config.entity}`;
       this.alarmState = undefined;
+      this._clearTransitionState();
       return;
     }
 
     // Entity is available - clear errors and update state
     if (AlarmStateManager.isValidAlarmEntity(entity)) {
+      const previousState = this.alarmState?.state;
       this.alarmState = AlarmStateManager.mapEntityState(entity);
       this.entityError = undefined;
+
+      // Handle transition state changes
+      this._handleTransitionStateChange(
+        this.alarmState.state,
+        entity.attributes,
+        previousState
+      );
     } else {
       const domain = this.config.entity.split('.')[0];
       this.entityError = `wrong_domain:${this.config.entity}:${domain}`;
       this.alarmState = undefined;
+      this._clearTransitionState();
     }
+  }
+
+  /**
+   * Handle transition state changes
+   * Detects when alarm enters/exits transitional states and manages progress
+   * @param currentState - The current alarm state
+   * @param entityAttributes - The entity attributes
+   * @param previousState - The previous alarm state (if any)
+   */
+  private _handleTransitionStateChange(
+    currentState: AlarmState['state'],
+    entityAttributes: Record<string, unknown>,
+    previousState?: AlarmState['state']
+  ): void {
+    const isCurrentlyTransitional =
+      TransitionStateManager.isTransitionalState(currentState);
+    const wasTransitional = previousState
+      ? TransitionStateManager.isTransitionalState(previousState)
+      : false;
+
+    // Get exitSecondsLeft from entity attributes
+    const exitSecondsLeft =
+      (entityAttributes.exit_seconds_left as number) ??
+      (entityAttributes.exitSecondsLeft as number) ??
+      0;
+
+    if (isCurrentlyTransitional) {
+      // Entering or continuing a transitional state
+      const targetAction = TransitionStateManager.getTransitionTarget(
+        currentState,
+        entityAttributes
+      );
+
+      // Check if this is a new transition or a change in target
+      const isNewTransition = !wasTransitional || previousState !== currentState;
+      const targetChanged =
+        this.transitionState.isTransitioning &&
+        this.transitionState.targetAction !== targetAction;
+
+      if (isNewTransition || targetChanged) {
+        // Cancel any previous transition and start fresh
+        // This handles rapid state changes by immediately applying the latest state
+        this._transitionTotalDuration =
+          TransitionStateManager.captureInitialDuration(exitSecondsLeft);
+        this.transitionState = TransitionStateManager.createTransitionState(
+          targetAction,
+          exitSecondsLeft
+        );
+      } else {
+        // Continuing in same transitional state - update progress
+        const progress = TransitionStateManager.calculateProgress(
+          exitSecondsLeft,
+          this._transitionTotalDuration
+        );
+
+        this.transitionState = {
+          ...this.transitionState,
+          remainingSeconds: exitSecondsLeft,
+          progress,
+        };
+      }
+    } else if (wasTransitional) {
+      // Exited transitional state - clear transition immediately
+      this._clearTransitionState();
+    }
+  }
+
+  /**
+   * Clear the transition state
+   */
+  private _clearTransitionState(): void {
+    this._transitionTotalDuration = 0;
+    this.transitionState = TransitionStateManager.createEmptyState();
   }
 
   /**
@@ -259,10 +353,18 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       if (entity && AlarmStateManager.isValidAlarmEntity(entity)) {
         this.alarmState = AlarmStateManager.mapEntityState(entity);
         this.entityError = undefined;
+
+        // Initialize transition state if entity is in transitional state
+        this._handleTransitionStateChange(
+          this.alarmState.state,
+          entity.attributes,
+          undefined
+        );
       } else {
         const domain = this.config.entity.split('.')[0];
         this.entityError = `wrong_domain:${this.config.entity}:${domain}`;
         this.alarmState = undefined;
+        this._clearTransitionState();
       }
     } catch (error) {
       // Parse the error to provide specific error types
@@ -283,6 +385,7 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       }
 
       this.alarmState = undefined;
+      this._clearTransitionState();
     }
   }
 
@@ -362,11 +465,56 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       return html``;
     }
 
+    // Create button states with transition properties
+    const buttonStatesWithTransition = this._getButtonStatesWithTransition();
+
+    // Generate live announcement for transitional states
+    const liveAnnouncement = this.transitionState.isTransitioning
+      ? AlarmDisplayRenderer.generateTransitionAnnouncement(
+          this.alarmState?.state ?? 'unknown',
+          this.transitionState.targetAction
+        )
+      : undefined;
+
     return AlarmDisplayRenderer.renderControlButtons(
       this.alarmState,
-      this.buttonStates,
-      (action: ControlActionType) => this._handleControlButtonClick(action)
+      buttonStatesWithTransition,
+      (action: ControlActionType) => this._handleControlButtonClick(action),
+      liveAnnouncement
     );
+  }
+
+  /**
+   * Get button states with transition properties merged in
+   * @returns Map of button states with transition information
+   */
+  private _getButtonStatesWithTransition(): Map<
+    ControlActionType,
+    ControlButtonState
+  > {
+    const newButtonStates = new Map<ControlActionType, ControlButtonState>();
+
+    for (const [action, state] of this.buttonStates) {
+      const isTransitionTarget =
+        this.transitionState.isTransitioning &&
+        this.transitionState.targetAction === action;
+
+      if (isTransitionTarget) {
+        newButtonStates.set(action, {
+          ...state,
+          isTransitionTarget: true,
+          transitionProgress: this.transitionState.progress,
+          transitionRemainingSeconds: this.transitionState.remainingSeconds,
+        });
+      } else {
+        newButtonStates.set(action, {
+          ...state,
+          isTransitionTarget: false,
+        });
+      }
+    }
+
+    return newButtonStates;
   }
 
   /**

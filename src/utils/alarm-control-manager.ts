@@ -29,6 +29,12 @@ export interface ControlButtonState {
   isLoading: boolean;
   isDisabled: boolean;
   hasError: boolean;
+  /** Whether this button is the target of a current transition */
+  isTransitionTarget?: boolean;
+  /** Progress percentage (0-100) for transition indicator */
+  transitionProgress?: number;
+  /** Remaining seconds in the transition countdown */
+  transitionRemainingSeconds?: number;
 }
 
 /**

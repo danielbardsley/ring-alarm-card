@@ -34,16 +34,22 @@ export const buttonStyles = css`
     font-weight: 500;
     cursor: pointer;
     transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease,
-      color 0.2s ease,
+      background-color 300ms ease,
+      border-color 300ms ease,
+      color 300ms ease,
+      box-shadow 300ms ease,
       transform 0.1s ease,
       opacity 0.2s ease;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     outline: none;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+
+    /* Progress indicator custom properties */
+    --progress-percent: 0;
+    --progress-color: var(--primary-color, #03a9f4);
+    --progress-border-width: 3px;
   }
 
   .control-button:focus-visible {
@@ -145,6 +151,53 @@ export const buttonStyles = css`
     }
   }
 
+  /* Transitioning state - Progress indicator */
+  .control-button.transitioning {
+    /* Ensure button is positioned for pseudo-element */
+    position: relative;
+    overflow: visible;
+  }
+
+  .control-button.transitioning::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from 0deg at 50% 50%,
+      var(--progress-color) calc(var(--progress-percent) * 1%),
+      transparent calc(var(--progress-percent) * 1%)
+    );
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    padding: var(--progress-border-width);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Theme-specific progress colors */
+  .control-button.transitioning {
+    --progress-color: var(--primary-color, #03a9f4);
+  }
+
+  .control-button.transitioning.arm_home {
+    --progress-color: var(--warning-color, #ff9800);
+  }
+
+  .control-button.transitioning.arm_away {
+    --progress-color: var(--error-color, #f44336);
+  }
+
+  .control-button.transitioning.disarm {
+    --progress-color: var(--success-color, #4caf50);
+  }
+
   /* Error state */
   .control-button.error {
     border-color: var(--error-color, #f44336);
@@ -236,5 +289,24 @@ export const buttonStyles = css`
     .control-button.error {
       animation: none;
     }
+
+    /* Show static progress state instead of animation */
+    .control-button.transitioning::before {
+      /* Keep the progress indicator visible but without animation */
+      /* The conic-gradient will show static progress based on --progress-percent */
+    }
+  }
+
+  /* Screen reader only class for ARIA live region */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 `;

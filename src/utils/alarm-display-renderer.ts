@@ -268,12 +268,14 @@ compact_mode: false</pre
    * @param alarmState - The current alarm state (undefined if unavailable)
    * @param buttonStates - Map of button states for each action type
    * @param onButtonClick - Callback function when a button is clicked
+   * @param liveAnnouncement - Optional announcement for ARIA live region
    * @returns TemplateResult for control buttons row
    */
   static renderControlButtons(
     alarmState: AlarmState | undefined,
     buttonStates: Map<ControlActionType, ControlButtonState>,
-    onButtonClick: (action: ControlActionType) => void
+    onButtonClick: (action: ControlActionType) => void,
+    liveAnnouncement?: string
   ): TemplateResult {
     const actions = AlarmControlManager.getControlActions();
     const activeAction = alarmState
@@ -284,7 +286,11 @@ compact_mode: false</pre
     );
 
     return html`
-      <div class="control-buttons" role="group" aria-label="Alarm control buttons">
+      <div
+        class="control-buttons"
+        role="group"
+        aria-label="Alarm control buttons"
+      >
         ${actions.map(action => {
           const buttonState = buttonStates.get(action.type) || {
             isActive: false,
@@ -301,14 +307,78 @@ compact_mode: false</pre
             hasError: buttonState.hasError,
           };
 
+          // Add optional transition properties if present
+          if (buttonState.isTransitionTarget !== undefined) {
+            computedState.isTransitionTarget = buttonState.isTransitionTarget;
+          }
+          if (buttonState.transitionProgress !== undefined) {
+            computedState.transitionProgress = buttonState.transitionProgress;
+          }
+          if (buttonState.transitionRemainingSeconds !== undefined) {
+            computedState.transitionRemainingSeconds = buttonState.transitionRemainingSeconds;
+          }
+
           return AlarmDisplayRenderer.renderControlButton(
             action,
             computedState,
             () => onButtonClick(action.type)
           );
         })}
+        ${AlarmDisplayRenderer.renderLiveRegion(liveAnnouncement)}
       </div>
     `;
+  }
+
+  /**
+   * Render ARIA live region for state announcements
+   * @param announcement - The announcement text to display
+   * @returns TemplateResult for ARIA live region
+   */
+  static renderLiveRegion(announcement?: string): TemplateResult {
+    return html`
+      <div
+        class="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        ${announcement || ''}
+      </div>
+    `;
+  }
+
+  /**
+   * Generate announcement text for transitional state changes
+   * @param alarmState - The current alarm state
+   * @param targetAction - The target action for the transition
+   * @returns Announcement text for screen readers
+   */
+  static generateTransitionAnnouncement(
+    alarmState: AlarmState['state'],
+    targetAction: ControlActionType | null
+  ): string {
+    if (!targetAction) {
+      return '';
+    }
+
+    const actionLabels: Record<ControlActionType, string> = {
+      disarm: 'disarmed mode',
+      arm_home: 'home mode',
+      arm_away: 'away mode',
+    };
+
+    const targetLabel = actionLabels[targetAction];
+
+    switch (alarmState) {
+      case 'arming':
+        return `Alarm arming to ${targetLabel}`;
+      case 'pending':
+        return `Alarm entry delay active, currently in ${targetLabel}`;
+      case 'disarming':
+        return `Alarm disarming`;
+      default:
+        return '';
+    }
   }
 
   /**
@@ -344,14 +414,13 @@ compact_mode: false</pre
       classes.push('error');
     }
 
-    // Generate ARIA label based on action type
-    const ariaLabels: Record<ControlActionType, string> = {
-      disarm: 'Set alarm to disarmed',
-      arm_home: 'Arm alarm in home mode',
-      arm_away: 'Arm alarm in away mode',
-    };
+    // Add transitioning class when button is transition target
+    if (state.isTransitionTarget) {
+      classes.push('transitioning', action.type);
+    }
 
-    const ariaLabel = ariaLabels[action.type];
+    // Generate ARIA label based on action type and transition state
+    const ariaLabel = AlarmDisplayRenderer.generateAriaLabel(action, state);
 
     // Determine icon - use loading icon if loading
     const icon = state.isLoading ? 'mdi:loading' : action.icon;
@@ -363,9 +432,16 @@ compact_mode: false</pre
       }
     };
 
+    // Build inline styles for progress indicator
+    const progressPercent = state.transitionProgress ?? 0;
+    const progressStyle = state.isTransitionTarget
+      ? `--progress-percent: ${progressPercent};`
+      : '';
+
     return html`
       <button
         class="${classes.join(' ')}"
+        style="${progressStyle}"
         aria-label="${ariaLabel}"
         aria-pressed="${state.isActive ? 'true' : 'false'}"
         aria-disabled="${state.isDisabled ? 'true' : 'false'}"
@@ -380,5 +456,36 @@ compact_mode: false</pre
         <span class="control-button-label">${action.label}</span>
       </button>
     `;
+  }
+
+  /**
+   * Generate ARIA label for a control button
+   * Includes countdown status when button is transitioning
+   * @param action - The control action definition
+   * @param state - The button's current state
+   * @returns ARIA label string
+   */
+  static generateAriaLabel(
+    action: ControlAction,
+    state: ControlButtonState
+  ): string {
+    // Base ARIA labels for each action type
+    const baseAriaLabels: Record<ControlActionType, string> = {
+      disarm: 'Set alarm to disarmed',
+      arm_home: 'Arm alarm in home mode',
+      arm_away: 'Arm alarm in away mode',
+    };
+
+    const baseLabel = baseAriaLabels[action.type];
+
+    // If transitioning, include countdown status
+    if (state.isTransitionTarget && state.transitionRemainingSeconds !== undefined) {
+      const seconds = Math.ceil(state.transitionRemainingSeconds);
+      const actionLabel = action.type === 'disarm' ? 'Disarming' :
+                          action.type === 'arm_home' ? 'Arming home' : 'Arming away';
+      return `${actionLabel} - ${seconds} second${seconds !== 1 ? 's' : ''} remaining`;
+    }
+
+    return baseLabel;
   }
 }

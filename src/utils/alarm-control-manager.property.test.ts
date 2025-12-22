@@ -125,7 +125,8 @@ describe('Property-Based Tests for AlarmControlManager', () => {
       // Stable states should allow control actions
       fc.assert(
         fc.property(stableStateArb, stableState => {
-          const isDisabled = AlarmControlManager.areControlsDisabled(stableState);
+          const isDisabled =
+            AlarmControlManager.areControlsDisabled(stableState);
           expect(isDisabled).toBe(false);
         }),
         { numRuns: 100 }
