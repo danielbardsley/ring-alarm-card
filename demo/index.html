@@ -315,7 +315,7 @@
     </div>
 
     <script type="module" src="../ring-alarm-card.js"></script>
-    <script>
+    <script type="module">
         // Mock HASS object for demo purposes
         function createMockHass(entityState, attributes = {}, vacationState = null) {
             const states = {
@@ -429,7 +429,10 @@
         }
 
         // Configure cards when DOM is ready
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for the custom element to be defined
+            await customElements.whenDefined('ring-alarm-card');
+
             const baseConfig = {
                 type: 'custom:ring-alarm-card',
                 entity: 'alarm_control_panel.ring_alarm',

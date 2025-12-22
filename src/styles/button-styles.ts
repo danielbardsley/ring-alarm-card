@@ -57,7 +57,7 @@ export const buttonStyles = css`
     outline-offset: 2px;
   }
 
-  .control-button:hover:not(:disabled):not(.disabled) {
+  .control-button:hover:not(:disabled):not(.disabled):not(.active) {
     background: var(--secondary-background-color, #f5f5f5);
   }
 
