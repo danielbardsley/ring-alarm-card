@@ -75,3 +75,10 @@ export interface EntityError {
   message: string;
   entityId: string;
 }
+
+// Re-export control types from AlarmControlManager
+export type {
+  ControlActionType,
+  ControlAction,
+  ControlButtonState,
+} from '@/utils/alarm-control-manager';

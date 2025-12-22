@@ -4,7 +4,12 @@
  */
 
 import { html, TemplateResult } from 'lit';
-import { AlarmState, RingAlarmCardConfig } from '@/types';
+import { AlarmState, RingAlarmCardConfig, ControlButtonState } from '@/types';
+import {
+  AlarmControlManager,
+  ControlAction,
+  ControlActionType,
+} from './alarm-control-manager';
 
 export class AlarmDisplayRenderer {
   /**
@@ -255,6 +260,125 @@ compact_mode: false</pre
           </div>
         </div>
       </div>
+    `;
+  }
+
+  /**
+   * Render the control buttons row
+   * @param alarmState - The current alarm state (undefined if unavailable)
+   * @param buttonStates - Map of button states for each action type
+   * @param onButtonClick - Callback function when a button is clicked
+   * @returns TemplateResult for control buttons row
+   */
+  static renderControlButtons(
+    alarmState: AlarmState | undefined,
+    buttonStates: Map<ControlActionType, ControlButtonState>,
+    onButtonClick: (action: ControlActionType) => void
+  ): TemplateResult {
+    const actions = AlarmControlManager.getControlActions();
+    const activeAction = alarmState
+      ? AlarmControlManager.getActiveAction(alarmState.state)
+      : null;
+    const controlsDisabled = AlarmControlManager.areControlsDisabled(
+      alarmState?.state
+    );
+
+    return html`
+      <div class="control-buttons" role="group" aria-label="Alarm control buttons">
+        ${actions.map(action => {
+          const buttonState = buttonStates.get(action.type) || {
+            isActive: false,
+            isLoading: false,
+            isDisabled: false,
+            hasError: false,
+          };
+
+          // Merge computed state with provided state
+          const computedState: ControlButtonState = {
+            isActive: activeAction === action.type,
+            isLoading: buttonState.isLoading,
+            isDisabled: controlsDisabled || buttonState.isDisabled,
+            hasError: buttonState.hasError,
+          };
+
+          return AlarmDisplayRenderer.renderControlButton(
+            action,
+            computedState,
+            () => onButtonClick(action.type)
+          );
+        })}
+      </div>
+    `;
+  }
+
+  /**
+   * Render a single control button
+   * @param action - The control action definition
+   * @param state - The button's current state
+   * @param onClick - Callback function when button is clicked
+   * @returns TemplateResult for a single control button
+   */
+  static renderControlButton(
+    action: ControlAction,
+    state: ControlButtonState,
+    onClick: () => void
+  ): TemplateResult {
+    // Build CSS classes based on state
+    const classes: string[] = ['control-button'];
+
+    if (state.isActive) {
+      classes.push('active', action.type);
+    } else {
+      classes.push('inactive');
+    }
+
+    if (state.isLoading) {
+      classes.push('loading');
+    }
+
+    if (state.isDisabled) {
+      classes.push('disabled');
+    }
+
+    if (state.hasError) {
+      classes.push('error');
+    }
+
+    // Generate ARIA label based on action type
+    const ariaLabels: Record<ControlActionType, string> = {
+      disarm: 'Set alarm to disarmed',
+      arm_home: 'Arm alarm in home mode',
+      arm_away: 'Arm alarm in away mode',
+    };
+
+    const ariaLabel = ariaLabels[action.type];
+
+    // Determine icon - use loading icon if loading
+    const icon = state.isLoading ? 'mdi:loading' : action.icon;
+
+    // Handle click - only if not disabled and not loading
+    const handleClick = () => {
+      if (!state.isDisabled && !state.isLoading) {
+        onClick();
+      }
+    };
+
+    return html`
+      <button
+        class="${classes.join(' ')}"
+        aria-label="${ariaLabel}"
+        aria-pressed="${state.isActive ? 'true' : 'false'}"
+        aria-disabled="${state.isDisabled ? 'true' : 'false'}"
+        ?disabled="${state.isDisabled}"
+        @click="${handleClick}"
+      >
+        <ha-icon
+          class="control-button-icon"
+          icon="${icon}"
+          aria-hidden="true"
+        ></ha-icon>
+        <span class="control-button-label">${action.label}</span>
+      </button>
     `;
   }
 }

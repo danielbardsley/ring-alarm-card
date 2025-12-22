@@ -14,10 +14,13 @@ import type {
   LovelaceCard,
   RingAlarmCardConfig,
   AlarmState,
+  ControlButtonState,
 } from '../types';
+import type { ControlActionType } from '../utils/alarm-control-manager';
 import { ConfigurationManager } from '../config/configuration-manager';
 import { AlarmStateManager } from '../utils/alarm-state-manager';
 import { AlarmDisplayRenderer } from '../utils/alarm-display-renderer';
+import { AlarmControlManager } from '../utils/alarm-control-manager';
 import { cardStyles } from '../styles/card-styles';
 import { getHassStatus, hasEntityStateChanged } from '../utils/hass-utils';
 
@@ -27,11 +30,106 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
   @state() private config!: RingAlarmCardConfig;
   @state() private alarmState: AlarmState | undefined;
   @state() private entityError: string | undefined;
+  @state() private buttonStates: Map<ControlActionType, ControlButtonState> =
+    new Map();
 
   /**
    * Lit component styles using CSS-in-JS
    */
   static override styles = cardStyles;
+
+  /**
+   * Initialize button states for all control actions
+   */
+  private _initializeButtonStates(): void {
+    const actions = AlarmControlManager.getControlActions();
+    const newButtonStates = new Map<ControlActionType, ControlButtonState>();
+
+    for (const action of actions) {
+      newButtonStates.set(action.type, {
+        isActive: false,
+        isLoading: false,
+        isDisabled: false,
+        hasError: false,
+      });
+    }
+
+    this.buttonStates = newButtonStates;
+  }
+
+  /**
+   * Lifecycle callback when element is connected to DOM
+   */
+  override connectedCallback(): void {
+    // Call super only if it exists (may not in test environments)
+    if (super.connectedCallback) {
+      super.connectedCallback();
+    }
+    this._initializeButtonStates();
+  }
+
+  /**
+   * Update the state of a specific button
+   * @param action - The action type to update
+   * @param state - Partial state to merge with existing state
+   */
+  private _updateButtonState(
+    action: ControlActionType,
+    state: Partial<ControlButtonState>
+  ): void {
+    const currentState = this.buttonStates.get(action) || {
+      isActive: false,
+      isLoading: false,
+      isDisabled: false,
+      hasError: false,
+    };
+
+    const newButtonStates = new Map(this.buttonStates);
+    newButtonStates.set(action, { ...currentState, ...state });
+    this.buttonStates = newButtonStates;
+  }
+
+  /**
+   * Clear error state on a button after a delay
+   * @param action - The action type to clear error for
+   */
+  private _clearButtonError(action: ControlActionType): void {
+    setTimeout(() => {
+      this._updateButtonState(action, { hasError: false });
+    }, 3000);
+  }
+
+  /**
+   * Handle control button click - call Home Assistant service
+   * @param action - The action type that was clicked
+   */
+  private async _handleControlButtonClick(
+    action: ControlActionType
+  ): Promise<void> {
+    if (!this.hass || !this.config?.entity) {
+      return;
+    }
+
+    // Set loading state
+    this._updateButtonState(action, { isLoading: true, hasError: false });
+
+    try {
+      // Get the service name for this action
+      const service = AlarmControlManager.getServiceForAction(action);
+
+      // Call the Home Assistant service
+      await this.hass.callService('alarm_control_panel', service, {
+        entity_id: this.config.entity,
+      });
+
+      // Success - clear loading state
+      this._updateButtonState(action, { isLoading: false });
+    } catch (error) {
+      // Failure - set error state and schedule clear
+      this._updateButtonState(action, { isLoading: false, hasError: true });
+      this._clearButtonError(action);
+    }
+  }
 
   /**
    * Set the card configuration
@@ -239,12 +337,12 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       return AlarmDisplayRenderer.renderLoadingState();
     }
 
-    // Show alarm status if available
+    // Show alarm status and control buttons if available
     if (this.alarmState) {
-      return AlarmDisplayRenderer.renderAlarmStatus(
-        this.alarmState,
-        this.config
-      );
+      return html`
+        ${AlarmDisplayRenderer.renderAlarmStatus(this.alarmState, this.config)}
+        ${this._renderControlButtons()}
+      `;
     }
 
     // Fallback - should not normally reach here
@@ -256,23 +354,39 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
   }
 
   /**
+   * Render control buttons when entity is valid and HASS is available
+   */
+  private _renderControlButtons(): TemplateResult {
+    // Only render when entity is valid and HASS is available
+    if (!this.hass || !this.config?.entity) {
+      return html``;
+    }
+
+    return AlarmDisplayRenderer.renderControlButtons(
+      this.alarmState,
+      this.buttonStates,
+      (action: ControlActionType) => this._handleControlButtonClick(action)
+    );
+  }
+
+  /**
    * Render specific error types with appropriate messages
    */
   private _renderSpecificError(errorCode: string): TemplateResult {
     if (errorCode.startsWith('entity_not_found:')) {
-      const entityId = errorCode.split(':')[1];
+      const entityId = errorCode.split(':')[1] ?? 'unknown';
       return AlarmDisplayRenderer.renderEntityNotFound(entityId);
     }
 
     if (errorCode.startsWith('entity_unavailable:')) {
-      const entityId = errorCode.split(':')[1];
+      const entityId = errorCode.split(':')[1] ?? 'unknown';
       return AlarmDisplayRenderer.renderEntityUnavailable(entityId);
     }
 
     if (errorCode.startsWith('wrong_domain:')) {
       const parts = errorCode.split(':');
-      const entityId = parts[1];
-      const actualDomain = parts[2];
+      const entityId = parts[1] ?? 'unknown';
+      const actualDomain = parts[2] ?? 'unknown';
       return AlarmDisplayRenderer.renderWrongEntityDomain(
         entityId,
         actualDomain

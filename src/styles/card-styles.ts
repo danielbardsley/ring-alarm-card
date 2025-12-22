@@ -4,6 +4,7 @@
 
 import { css } from 'lit';
 import { alarmStyles } from './alarm-styles';
+import { buttonStyles } from './button-styles';
 
 export const cardStyles = [
   css`
@@ -55,4 +56,5 @@ export const cardStyles = [
     }
   `,
   alarmStyles,
+  buttonStyles,
 ];
