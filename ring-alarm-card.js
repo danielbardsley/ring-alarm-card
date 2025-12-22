@@ -172,12 +172,7 @@ compact_mode: false</pre
         ${ft.renderLiveRegion(i)}
       </div>
     `}static renderLiveRegion(t){return W`
-      <div
-        class="sr-only"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
+      <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
         ${t||""}
       </div>
     `}static generateTransitionAnnouncement(t,e){if(!e)return"";const r={disarm:"disarmed mode",arm_home:"home mode",arm_away:"away mode"}[e];switch(t){case"arming":return`Alarm arming to ${r}`;case"pending":return`Alarm entry delay active, currently in ${r}`;case"disarming":return"Alarm disarming";default:return""}}static renderControlButton(t,e,r){const i=["control-button"];e.isActive?i.push("active",t.type):i.push("inactive"),e.isLoading&&i.push("loading"),e.isDisabled&&i.push("disabled"),e.hasError&&i.push("error"),e.isTransitionTarget&&i.push("transitioning",t.type);const a=ft.generateAriaLabel(t,e),o=e.isLoading?"mdi:loading":t.icon,n=e.transitionProgress??0,s=e.isTransitionTarget?`--progress-percent: ${n};`:"";return W`
