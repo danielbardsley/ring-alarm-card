@@ -24,11 +24,18 @@ src/
 ├── registration/           # Card registration logic
 │   └── card-registration.ts
 ├── styles/                 # CSS-in-JS styles
-│   └── card-styles.ts
+│   ├── card-styles.ts      # Main card styles
+│   ├── alarm-styles.ts     # Alarm status styles
+│   └── button-styles.ts    # Control button styles
 ├── types/                  # TypeScript type definitions
 │   └── index.ts
-├── utils/                  # Utility functions
-│   └── hass-utils.ts
+├── utils/                  # Utility modules
+│   ├── hass-utils.ts              # Home Assistant utilities
+│   ├── alarm-state-manager.ts     # Alarm state mapping
+│   ├── alarm-control-manager.ts   # Button actions and services
+│   ├── alarm-display-renderer.ts  # UI rendering utilities
+│   ├── transition-state-manager.ts # Progress indicator logic
+│   └── vacation-button-manager.ts  # Vacation toggle logic
 ├── test/                   # Test utilities and setup
 │   └── setup.ts
 ├── index.ts                # Main entry point

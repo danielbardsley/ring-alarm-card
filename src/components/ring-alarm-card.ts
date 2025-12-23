@@ -1,9 +1,9 @@
 /**
  * Ring Alarm Card Component
  *
- * A custom Lovelace card that provides a foundation for Ring alarm system integration.
- * Currently displays a basic "Hello World" message and implements all required
- * Lovelace card interface methods.
+ * A custom Lovelace card for Ring alarm system integration.
+ * Displays alarm status with control buttons for arming/disarming,
+ * optional vacation mode toggle, and transition progress indicators.
  */
 
 import { LitElement, html, TemplateResult, PropertyValues } from 'lit';
@@ -399,12 +399,12 @@ export class RingAlarmCard extends LitElement implements LovelaceCard {
       if (isNewTransition || targetChanged) {
         // Cancel any previous transition and start fresh
         this._stopProgressInterpolation();
-        
+
         // Always capture the new duration when starting a transition or changing target
         // This ensures progress resets properly when switching between Home/Away
         this._transitionTotalDuration =
           TransitionStateManager.captureInitialDuration(exitSecondsLeft);
-        
+
         // Reset progress to 0 for the new transition
         this.transitionState = TransitionStateManager.createTransitionState(
           targetAction,

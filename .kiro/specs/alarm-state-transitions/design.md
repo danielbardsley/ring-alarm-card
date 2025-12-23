@@ -44,10 +44,10 @@ The progress indicator fills along the button's border edge, starting from the t
 Button Border Progress Animation (clockwise from top):
 
     0%              25%             50%             75%             100%
-  ┌─────┐         ┌██───┐         ┌█████┐         ┌█████┐         ┌█████┐
-  │     │         │     │         │     █         █     █         █     █
-  │     │         │     │         │     │         █     █         █     █
-  └─────┘         └─────┘         └─────┘         └███──┘         └█████┘
+  ┌─────┐         ┌██████         ┌██████         ┌██████         ███████
+  │     │         │     │         │     █         |     █         █     █
+  │     │         │     │         │     █         |     █         █     █
+  └─────┘         └─────┘         └─────█         ███████         ███████
 
   ─ │ = Normal button border (thin)
   █   = Progress indicator border (thicker, highlighted color)
